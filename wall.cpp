@@ -173,12 +173,17 @@ void Wall_rect::setAngle_horizontal(float alpha){
     this->angle_horizontal = alpha;
 }
 
+void Wall_rect::setAngle_vertical(float alpha){
+    this->angle_vertical = alpha;
+}
+
 void Wall_rect::draw(glm::mat4 P, glm::mat4 V, GLuint tex, ShaderProgram* s_p){
     s_p->use(); //Aktywuj program cieniujący
     glm::mat4 M = glm::mat4(1.0f);
 
     M = glm::translate(M, DBL);
-    M = glm::rotate(M, -angle_horizontal, glm::vec3(0.0, 3.0, 0.0));
+    M = glm::rotate(M, -angle_vertical, glm::vec3(0.0, 0.0, 1.0));
+    M = glm::rotate(M, -angle_horizontal, glm::vec3(0.0, 1.0, 0.0));
     M = glm::translate(M, -DBL);
     M = glm::scale(M, glm::vec3(l, h, w)*glm::vec3(0.5, 0.5, 0.5));
     M = glm::translate(M, glm::vec3(1, 1, 1 ));
@@ -210,12 +215,11 @@ bool Wall_rect::is_within(glm::vec3 punkt, float r){
     glm::vec3 _punkt; // punkt w układzie współrzędnych muru
     _punkt.x = (punkt.x - DBL.x)*cos(angle_horizontal) + (punkt.z - DBL.z)*sin(angle_horizontal);
     _punkt.z = -(punkt.x - DBL.x)*sin(angle_horizontal) + (punkt.z - DBL.z)*cos(angle_horizontal);
-    _punkt.y = punkt.y;
-
-    if(_punkt.x + r > 0 && _punkt.z + r > 0 && _punkt.y > DBL.y && _punkt.x-r < l && _punkt.z-r < w && _punkt.y < DBL.y + h){
-        return true;
-    }
-    else return false;
+    _punkt.y = -(punkt.x - DBL.x)*sin(angle_vertical) + (punkt.y - DBL.y)*cos(angle_vertical);
+    _punkt.x = (_punkt.x)*cos(angle_vertical) + (_punkt.y)*sin(angle_vertical);
+    //_punkt.x = (_punkt.x)*cos(angle_vertical) + (punkt.y - DBL.y)*sin(angle_vertical);
+    printf("pkt x=%f,  y=%f,  z=%f\n", _punkt.x, _punkt.y, _punkt.z);
+    return _punkt.x + r > 0 && _punkt.z + r > 0 && _punkt.y+r > 0 && _punkt.x-r < l && _punkt.z-r < w && _punkt.y-r < h;
 }
 
 //Wall_traingular ---------------------------------------------------
@@ -377,11 +381,16 @@ Wall_trian::Wall_trian(glm::vec3 punkt, float a, float b, float h, float gamma, 
     this->l = b;
     this->gamma = gamma;
     this->angle_horizontal = angle_horizontal;
+    this->angle_vertical = 0;
     wall_initializer();
 }
 
 void Wall_trian::setAngle_horizontal(float alpha){
     angle_horizontal = alpha;
+}
+
+void Wall_trian::setAngle_vertical(float alpha){
+    this->angle_vertical = alpha;
 }
 
 void Wall_trian::draw(glm::mat4 P, glm::mat4 V, GLuint tex, ShaderProgram* s_p){
@@ -390,6 +399,7 @@ void Wall_trian::draw(glm::mat4 P, glm::mat4 V, GLuint tex, ShaderProgram* s_p){
 
     M = glm::translate(M, DBL);
     M = glm::rotate(M, (float)(-angle_horizontal), glm::vec3(0.0, 1.0, 0.0));
+    M = glm::rotate(M, -angle_vertical, glm::vec3(0.0, 0.0, 1.0));
     //M = glm::rotate(M, (float)(3.14159265359), glm::vec3(1.0, 0.0, 0.0));
     M = glm::scale(M, glm::vec3(w, h, w));
 

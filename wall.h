@@ -19,6 +19,7 @@ class Wall{ // abstrakcyjna klasa do tworzenia graniastosłupów o różnych pod
         float h; // wysokość
         float gamma; // kąt (w radianach) pomiędzy bokami l, w (używany tylko w trójkątnych bryłach)
         float angle_horizontal; // kąt (w radianach), o jaki obrócona jest bryła wokół osi OY
+        float angle_vertical; // kąt (w radianach), o jaki obrócona jest bryła
 
         unsigned int VERTEX_COUNT; // liczba wierzchołków
         float *VERTICES; // tablica z wierzchołkami
@@ -31,6 +32,7 @@ class Wall{ // abstrakcyjna klasa do tworzenia graniastosłupów o różnych pod
 
     public:
         virtual void setAngle_horizontal(float alpha) = 0;
+        virtual void setAngle_vertical(float alpha) = 0;
         virtual void draw(glm::mat4 P, glm::mat4 V, GLuint tex, ShaderProgram* s_p) = 0; // metoda rysująca
 
         virtual bool is_within(glm::vec3 punkt, float radius) = 0; // metoda sprawdzająca, czy jakikolwiek punkt w odległości 'radius' od 'punkt' znajduje się wewnątrz bryły
@@ -49,6 +51,7 @@ class Wall_rect : public Wall{
         Wall_rect(float xl, float yd, float zb, float dlugosc, float wysokosc, float szerokosc);
         ~Wall_rect();
         void setAngle_horizontal(float alpha);
+        void setAngle_vertical(float alpha);
         void draw(glm::mat4 P, glm::mat4 V, GLuint tex, ShaderProgram* s_p);
 
         bool is_within(glm::vec3 punkt, float radius);
@@ -64,6 +67,7 @@ class Wall_trian : public Wall{
         Wall_trian();
         Wall_trian(glm::vec3 punkt, float a, float b, float h, float gamma, float angle_horizontal);
         void setAngle_horizontal(float alpha);
+        void setAngle_vertical(float alpha);
         void draw(glm::mat4 P, glm::mat4 V, GLuint tex, ShaderProgram* s_p);
         bool is_within(glm::vec3 punkt, float radius);
 };

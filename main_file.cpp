@@ -312,10 +312,15 @@ void prepareMoveables(){
 void prepareScene(){
         Wall_rect mur;
         mur = Wall_rect(2, 0, 3, 1, 5, 7);
-        mur.setAngle_horizontal(PI/4);
+        mur.setAngle_horizontal(PI/2);
+        mur.setAngle_vertical(PI/2);
         obstacles_rect.push_back(mur);
-        Wall_trian murek = Wall_trian(glm::vec3(1.0, 0.0, 3.0), 3, 16, 5, PI*0.80, PI/4);
-        obstacles_tr.push_back(murek);
+        //Wall_trian murek = Wall_trian(glm::vec3(1.0, 0.0, 3.0), 3, 16, 5, PI*0.80, PI/4);
+        //murek.setAngle_vertical(PI/2);
+        //obstacles_tr.push_back(murek);
+
+        //mur = Wall_rect(-10, 0, -10, 4, 5, 6);
+        //obstacles_rect.push_back(mur);
 
         for(unsigned int i=0;i<obstacles_rect.size();i++) OBSTACLES.push_back(&obstacles_rect[i]);
         for(unsigned int i=0;i<obstacles_tr.size();i++) OBSTACLES.push_back(&obstacles_tr[i]);
