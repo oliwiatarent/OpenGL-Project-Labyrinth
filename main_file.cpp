@@ -25,7 +25,7 @@ unsigned short screenheight = 500;
 float aspectRatio = 1.0;
 bool cursor_centred = true;
 
-GLuint tex;
+std::vector<GLuint> TEXTURES;
 std::vector<Wall_rect> obstacles_rect;
 std::vector<Wall_trian> obstacles_tr;
 std::vector<Wall*> OBSTACLES;
@@ -75,10 +75,10 @@ void key_repetition_wall_creation(GLFWwindow* window, int key, int scancode, int
                 else if(key==KEY_DEC_WALL_GAMMA){
                         wall_creator.changeGamma(-dg);
                 }
-                else if(key==KEY_ROTATE_WALL_LEFT){
+                else if(key==KEY_ROTATE_WALL_Y_LEFT){
                         wall_creator.changeAngle_horizontal(dg);
                 }
-                else if(key==KEY_ROTATE_WALL_RIGHT){
+                else if(key==KEY_ROTATE_WALL_Y_RIGHT){
                         wall_creator.changeAngle_horizontal(-dg);
                 }
                 else if(key==KEY_INC_WALL_LENGTH){
@@ -98,6 +98,15 @@ void key_repetition_wall_creation(GLFWwindow* window, int key, int scancode, int
                 }
                 else if(key==KEY_DEC_WALL_HEIGHT){
                         wall_creator.changeHeight(-dx);
+                }
+                else if(key==KEY_ROTATE_WALL_Z_LEFT){
+                        wall_creator.changeAngle_vertical(dg);
+                }
+                else if(key==KEY_ROTATE_WALL_Z_RIGHT){
+                        wall_creator.changeAngle_vertical(-dg);
+                }
+                else if(key==KEY_ASSIGN_WALL_NEXT_TEXTURE){
+                        wall_creator.assign_next_texture(TEXTURES);
                 }
 		std::this_thread::sleep_for(std::chrono::milliseconds(50));
 	}
@@ -142,10 +151,10 @@ void key_callback_wall_creation(GLFWwindow* window, int key, int scancode, int a
         else if(key==KEY_DEC_WALL_GAMMA){
                 wall_creator.changeGamma(-dg);
         }
-        else if(key==KEY_ROTATE_WALL_LEFT){
+        else if(key==KEY_ROTATE_WALL_Y_LEFT){
                 wall_creator.changeAngle_horizontal(dg);
         }
-        else if(key==KEY_ROTATE_WALL_RIGHT){
+        else if(key==KEY_ROTATE_WALL_Y_RIGHT){
                 wall_creator.changeAngle_horizontal(-dg);
         }
         else if(key==KEY_INC_WALL_LENGTH){
@@ -165,6 +174,18 @@ void key_callback_wall_creation(GLFWwindow* window, int key, int scancode, int a
         }
         else if(key==KEY_DEC_WALL_HEIGHT){
                 wall_creator.changeHeight(-dx);
+        }
+        else if(key==KEY_ROTATE_WALL_Z_LEFT){
+                wall_creator.changeAngle_vertical(dg);
+        }
+        else if(key==KEY_ROTATE_WALL_Z_RIGHT){
+                wall_creator.changeAngle_vertical(-dg);
+        }
+        else if(key==KEY_ROTATE_WALL_Z_RIGHT){
+                wall_creator.changeAngle_vertical(-dg);
+        }
+        else if(key==KEY_ASSIGN_WALL_NEXT_TEXTURE){
+                wall_creator.assign_next_texture(TEXTURES);
         }
         std::thread t(key_repetition_wall_creation, window, key, scancode, action, mod);
         t.detach(); 
@@ -292,7 +313,8 @@ void initOpenGLProgram(GLFWwindow* window) {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         glfwSetCursorPos(window, screenwidth/2, screenheight/2);
 
-        tex = readTexture("assests/textures/marble.png");
+        TEXTURES.push_back(readTexture("assests/textures/marble.png"));
+        wall_creator.assign_next_texture(TEXTURES);
         sp = new ShaderProgram("v_test.glsl", NULL, "f_test.glsl");
 }
 
@@ -300,11 +322,11 @@ void initOpenGLProgram(GLFWwindow* window) {
 void freeOpenGLProgram(GLFWwindow* window) {
         freeShaders();
         //************Tutaj umieszczaj kod, który należy wykonać po zakończeniu pętli głównej************
-        glDeleteTextures(1, &tex);
+        for(unsigned int i=0;i<TEXTURES.size();i++) glDeleteTextures(1, &TEXTURES[i]);
 }
 
 void prepareMoveables(){
-        obserwator.setRadius(0.2);
+        obserwator.setRadius(0.02);
         obserwator.setPosition(-3, 1, -3);
         obserwator.setVelocity_value(5);
 }
@@ -312,15 +334,16 @@ void prepareMoveables(){
 void prepareScene(){
         Wall_rect mur;
         mur = Wall_rect(2, 0, 3, 1, 5, 7);
-        mur.setAngle_horizontal(PI/2);
-        mur.setAngle_vertical(PI/2);
+        mur.setAngle_horizontal(PI/6);
+        mur.setAngle_vertical(PI/3);
+        mur.setTexture(TEXTURES[0]);
         obstacles_rect.push_back(mur);
-        //Wall_trian murek = Wall_trian(glm::vec3(1.0, 0.0, 3.0), 3, 16, 5, PI*0.80, PI/4);
-        //murek.setAngle_vertical(PI/2);
-        //obstacles_tr.push_back(murek);
 
-        //mur = Wall_rect(-10, 0, -10, 4, 5, 6);
-        //obstacles_rect.push_back(mur);
+        Wall_trian murek = Wall_trian(glm::vec3(6.0, 0.0, 6.0), 3, 4, 5, PI*0.80);
+        murek.setAngle_vertical(PI/6);
+        murek.setAngle_horizontal(PI/3);
+        murek.setTexture(TEXTURES[0]);
+        obstacles_tr.push_back(murek);
 
         for(unsigned int i=0;i<obstacles_rect.size();i++) OBSTACLES.push_back(&obstacles_rect[i]);
         for(unsigned int i=0;i<obstacles_tr.size();i++) OBSTACLES.push_back(&obstacles_tr[i]);
@@ -333,20 +356,8 @@ void drawScene(GLFWwindow* window) {
         glm::mat4 V = glm::lookAt(obserwator.getPosition(), obserwator.getLookAtPoint(), glm::vec3(0.0f, 1.0f, 0.0f)); //Wylicz macierz widoku
         glm::mat4 P = glm::perspective(glm::radians(50.0f), aspectRatio, 0.01f, 50.0f); //Wylicz macierz rzutowania
 
-        for(unsigned int i=0;i<OBSTACLES.size();i++) OBSTACLES[i]->draw(P, V, tex, spLambertSun);
-        if(wall_creator.is_creating_wall) wall_creator.current_wall->draw(P, V, tex, spLambertSun);
-
-        /*
-        M = glm::mat4(1.0f); //Zainicjuj macierz modelu macierzą jednostkową
-        M = glm::translate(M, glm::vec3(2, -1, 3));
-        M = glm::scale(M, glm::vec3(0.1, 0.1, 0.1));
-	spLambert->use();//Aktywacja programu cieniującego
-	glUniform4f(spLambert->u("color"), 0.9, 0.6, 0.6, 1);
-	glUniformMatrix4fv(spConstant->u("M"),1,false,glm::value_ptr(M));
-        glUniformMatrix4fv(spConstant->u("P"),1,false,glm::value_ptr(P));
-	glUniformMatrix4fv(spConstant->u("V"),1,false,glm::value_ptr(V));
-        Models::teapot.drawSolid();
-        */
+        for(unsigned int i=0;i<OBSTACLES.size();i++) OBSTACLES[i]->draw(P, V, spLambertSun);
+        if(wall_creator.is_creating_wall) wall_creator.current_wall->draw(P, V, spLambertSun);
 
         glfwSwapBuffers(window); //Skopiuj bufor tylny do bufora przedniego
 }
@@ -363,8 +374,7 @@ int main(void){
 
         window = glfwCreateWindow(screenwidth, screenheight, "Katakumby", NULL, NULL);  //Utwórz okno 500x500 o tytule "OpenGL" i kontekst OpenGL.
 
-        if (!window) //Jeżeli okna nie udało się utworzyć, to zamknij program
-        {
+        if(!window){
                 fprintf(stderr, "Nie można utworzyć okna.\n");
                 glfwTerminate();
                 exit(EXIT_FAILURE);
