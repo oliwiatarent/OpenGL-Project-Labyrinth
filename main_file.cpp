@@ -11,6 +11,8 @@
 #include <vector>
 #include <thread>
 #include <chrono>
+#include <fstream>
+#include <sstream>
 #include "myCube.h"
 #include "constants.h"
 #include "allmodels.h"
@@ -19,6 +21,9 @@
 #include "moveable.h"
 #include "wall.h"
 #include "key-funcs.h"
+#include "labyrinth.h"
+
+using namespace std;
 
 unsigned short screenwidth = 500;
 unsigned short screenheight = 500;
@@ -245,8 +250,8 @@ void cursor_position_callback(GLFWwindow* window, double xpos, double ypos){
         double dy = ypos - screenheight/2;
 
         if(cursor_centred){
-                obserwator.change_angle_horizontal(dx * 0.001);
-                obserwator.change_angle_vertical(-dy * 0.001);
+                obserwator.change_angle_horizontal(dx * 0.00001);
+                obserwator.change_angle_vertical(-dy * 0.00001);
                 glfwSetCursorPos(window, screenwidth/2, screenheight/2);
         }
 }
@@ -292,7 +297,7 @@ void initOpenGLProgram(GLFWwindow* window) {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         glfwSetCursorPos(window, screenwidth/2, screenheight/2);
 
-        tex = readTexture("assests/textures/marble.png");
+        tex = readTexture("assests/textures/bricks.png");
         sp = new ShaderProgram("v_test.glsl", NULL, "f_test.glsl");
 }
 
@@ -305,17 +310,42 @@ void freeOpenGLProgram(GLFWwindow* window) {
 
 void prepareMoveables(){
         obserwator.setRadius(0.2);
-        obserwator.setPosition(-3, 1, -3);
+        obserwator.setPosition(-14, 3, -6);
         obserwator.setVelocity_value(5);
 }
 
-void prepareScene(){
-        Wall_rect mur;
-        mur = Wall_rect(2, 0, 3, 1, 5, 7);
-        mur.setAngle_horizontal(PI/4);
-        obstacles_rect.push_back(mur);
-        Wall_trian murek = Wall_trian(glm::vec3(1.0, 0.0, 3.0), 3, 16, 5, PI*0.80, PI/4);
-        obstacles_tr.push_back(murek);
+void prepareScene() {
+        int labyrinthHeight = 10, labirynthWidth = 10;
+        int numberOfFloors = 1;
+        float wallLength = 1.0f, wallHeight = 5.0f, wallWidth = 5.0f;
+        
+        for (int i = 0; i < numberOfFloors; i++) {
+                srand(std::chrono::high_resolution_clock::now().time_since_epoch().count() + i * 1337);
+
+                Labyrinth labyrinth = Labyrinth(labyrinthHeight, labirynthWidth);
+                // labyrinth.print();
+                labyrinth.generateCoordinates(i, wallLength, wallHeight, wallWidth);
+
+                ifstream file("input/labyrinth_" + to_string(i) + ".txt");
+                string line;
+
+                while (getline(file, line)) {
+                        istringstream iss(line);
+                        float xl, yd, zb, dlugosc, wysokosc, szerokosc;
+                        int horizontal;
+
+                        if (iss >> xl >> yd >> zb >> dlugosc >> wysokosc >> szerokosc >> horizontal) {
+                                // printf("xl = %lf, yd = %lf, zb = %lf, d = %lf, w = %lf, s = %lf, h = %d\n", xl, yd, zb, dlugosc, wysokosc, szerokosc, horizontal);
+
+                                Wall_rect mur;
+                                mur = Wall_rect(xl, yd, zb, dlugosc, wysokosc, szerokosc);
+                                if (horizontal) mur.setAngle_horizontal(PI/2); else mur.setAngle_horizontal(0);
+                                obstacles_rect.push_back(mur);
+                        }
+                }
+
+                file.close();
+        }
 
         for(unsigned int i=0;i<obstacles_rect.size();i++) OBSTACLES.push_back(&obstacles_rect[i]);
         for(unsigned int i=0;i<obstacles_tr.size();i++) OBSTACLES.push_back(&obstacles_tr[i]);
@@ -347,6 +377,8 @@ void drawScene(GLFWwindow* window) {
 }
 
 int main(void){
+        srand(time(NULL));
+
         GLFWwindow* window; //Wskaźnik na obiekt reprezentujący okno
 
         glfwSetErrorCallback(error_callback);//Zarejestruj procedurę obsługi błędów
