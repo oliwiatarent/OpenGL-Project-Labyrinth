@@ -138,10 +138,6 @@ void Wall_rect::skaluj(float tab[], unsigned int start, unsigned int stop, unsig
     for(unsigned i=start;i<stop;i += step) tab[i] *= mnoznik;
 }
 
-void Wall_rect::shape_triangle(float vertices[], float normals[]){
-
-}
-
 Wall_rect::Wall_rect(){
     DBL = glm::vec3(0.0, 0.0, 0.0);
     h = 1.0;
@@ -214,6 +210,10 @@ void Wall_rect::draw(glm::mat4 P, glm::mat4 V, ShaderProgram* s_p){
     glDisableVertexAttribArray(s_p->a("vertex"));
     glDisableVertexAttribArray(s_p->a("normal"));
     glDisableVertexAttribArray(s_p->a("texCoord")); 
+}
+
+char Wall_rect::getType(){
+    return 0;
 }
 
 bool Wall_rect::is_within(glm::vec3 punkt, float r){
@@ -430,6 +430,10 @@ void Wall_trian::draw(glm::mat4 P, glm::mat4 V, ShaderProgram* s_p){
     glDisableVertexAttribArray(s_p->a("texCoord")); 
 }
 
+char Wall_trian::getType(){
+    return 1;
+}
+
 bool Wall_trian::is_within(glm::vec3 punkt, float r){
     glm::vec3 _punkt; // punkt w układzie współrzędnych muru
     _punkt.z = -(punkt.x - DBL.x)*sin(angle_horizontal) + (punkt.z - DBL.z)*cos(angle_horizontal);
@@ -437,7 +441,54 @@ bool Wall_trian::is_within(glm::vec3 punkt, float r){
     _punkt.x = (punkt.x - DBL.x)*cos(angle_horizontal)*cos(angle_vertical) + (punkt.y - DBL.y)*sin(angle_vertical) + (punkt.z - DBL.z)*sin(angle_horizontal)*cos(angle_vertical);
 
     glm::vec2 C(l*sin(gamma+PI/2), l*cos(gamma-PI/2));
-    return _punkt.y > 0 && _punkt.y < h && _punkt.z > 0 && (_punkt.z)*(C.x) - (C.y)*(_punkt.x) < 0 && (_punkt.z)*(C.x-w) - (C.y)*(_punkt.x - w) > 0;
+    return _punkt.y+r > 0 && _punkt.y-r < h && _punkt.z+r > 0 && (_punkt.z)*(C.x) - (C.y)*(_punkt.x)-r < 0 && (_punkt.z)*(C.x-w) - (C.y)*(_punkt.x - w)+r > 0;
+}
+//Ramp ----------------------------------------------------------------------------------------------------------------
+
+void Ramp::wall_initializer(){
+    Wall_trian::wall_initializer();
+}
+
+void Ramp::skaluj(float tab[], unsigned int start, unsigned int stop, unsigned int step, float mnoznik){
+    Wall_trian::skaluj(tab, start, stop, step, mnoznik);
+}
+
+Ramp::Ramp(glm::vec3 punkt, float a, float b, float h){
+    this->DBL = punkt;
+    this->h = a;
+    this->l = b;
+    this->w = h;
+    this->gamma = PI/2;
+    this->angle_vertical = PI/2;
+    wall_initializer();
+}
+
+void Ramp::setAngle_horizontal(float alpha){
+    Wall_trian::setAngle_horizontal(alpha);
+}
+
+void Ramp::setAngle_vertical(float alpha){
+
+}
+
+void Ramp::setTexture(GLuint texture_id){
+    Wall_trian::setTexture(texture_id);
+}
+
+void Ramp::draw(glm::mat4 P, glm::mat4 V, ShaderProgram* s_p){
+    Wall_trian::draw(P, V, s_p);
+}
+
+char Ramp::getType(){
+    return 2;
+}
+
+bool Ramp::is_within(glm::vec3 punkt, float radius){
+    return Wall_trian::is_within(punkt, radius);
+}
+
+float Ramp::getRampAngleRatio(){
+    return h/l;
 }
 
 //Wall_creator --------------------------------------------------------------------------------------------------------
@@ -565,3 +616,5 @@ void Wall_creator::abort_wall_creation(){
     is_creating_wall = false;
     setArguments(glm::vec3(0.0, 0.0, 0.0), 1.0, 1.0, 1.0, 0.78, 0.0, 0.0);
 }
+
+#undef PI

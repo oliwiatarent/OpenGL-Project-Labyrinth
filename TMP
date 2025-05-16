@@ -1,0 +1,67 @@
+void Moveable::speedup_forward(){
+    glm::vec2 v;
+    v.x = cos(angle_horizontal) * velocity_value;
+    v.y = sin(angle_horizontal) * velocity_value;
+    setVelocity_horizontal(v);
+}
+
+void Moveable::speedup_backward(){
+    glm::vec2 v;
+    v.x = -cos(angle_horizontal) * velocity_value;
+    v.y = -sin(angle_horizontal) * velocity_value;
+    setVelocity_horizontal(v);
+}
+
+void Moveable::speedup_left(){
+    glm::vec2 v;
+    v.x = sin(angle_horizontal) * velocity_value;
+    v.y = -cos(angle_horizontal) * velocity_value;
+    setVelocity_horizontal(v);
+}
+
+void Moveable::speedup_right(){
+    glm::vec2 v;
+    v.x = -sin(angle_horizontal) * velocity_value;
+    v.y = cos(angle_horizontal) * velocity_value;
+    setVelocity_horizontal(v);
+}
+
+void Moveable::speedup_forward_right(){
+    glm::vec2 v;
+    v.x = cos(angle_horizontal) * velocity_value - sin(angle_horizontal) * velocity_value / 1.41;
+    v.y = sin(angle_horizontal) * velocity_value + cos(angle_horizontal) * velocity_value / 1.41;
+    setVelocity_horizontal(v);
+}
+
+void Moveable::speedup_forward_left(){
+    glm::vec2 v;
+    v.x = cos(angle_horizontal) * velocity_value + sin(angle_horizontal) * velocity_value / 1.41;
+    v.y = sin(angle_horizontal) * velocity_value - cos(angle_horizontal) * velocity_value / 1.41;
+    setVelocity_horizontal(v);
+}
+
+void Moveable::speedup_backward_right(){
+    glm::vec2 v;
+    v.x = -cos(angle_horizontal) * velocity_value - sin(angle_horizontal) * velocity_value / 1.41;
+    v.y = -sin(angle_horizontal) * velocity_value + cos(angle_horizontal) * velocity_value / 1.41;
+    setVelocity_horizontal(v);
+}
+
+void Moveable::speedup_backward_left(){
+    glm::vec2 v;
+    v.x = -cos(angle_horizontal) * velocity_value + sin(angle_horizontal) * velocity_value / 1.41;
+    v.y = -sin(angle_horizontal) * velocity_value - cos(angle_horizontal) * velocity_value / 1.41;
+    setVelocity_horizontal(v);
+}
+
+void Moveable::fly_up(){
+    glm::vec2 v = velocity;
+    v.y = velocity_value;
+    setVelocity_horizontal(v);
+}
+
+void Moveable::fly_down(){
+    glm::vec2 v = velocity;
+    v.y = -velocity_value;
+    setVelocity_horizontal(v);
+}

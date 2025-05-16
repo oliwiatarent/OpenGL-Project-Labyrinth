@@ -11,17 +11,21 @@
 #include <vector>
 #include "wall.h"
 
-
 class Moveable{
     protected:
         glm::vec3 position; // pozycja w przestrzeni świata
         glm::vec3 velocity; // znormalizowany wektor prędkości obiektu
         float angle_horizontal = 0.0; // kat obrotu obiektu wzdłuź osi OX (radiany)
         float velocity_value = 3.0; // wartość prędkości
+        float jump_height = 1.0; // wysokość, na jaką może skoczyć obiekt
         float radius = 1.0; // określa, w jakiej odległości od środka obiektu, będzie dochodzić do kolizji 
+        float height = 2.0; // określa, jak wysokość obiektu
+        bool in_air = true; // określa, czy obiekt znajduje się w powietrzu
+        bool can_jump = true; // określa, czy obiekt może skakać
 
         void move_along_obstacle(float T, std::vector<Wall*>& obstacles); // usprawnia ruch, gdy obiekt znajduje się obok przeszkody
         bool move_along_obstacle_util(float T, std::vector<Wall*>& obstacles);
+        bool can_fall_down(float T, std::vector<Wall*>& obstacles);
 
     public:
         Moveable();
@@ -33,6 +37,7 @@ class Moveable{
         glm::vec3 getPosition();
 
         void setVelocity(glm::vec3 v);
+        void setVelocity_horizontal(glm::vec2);
         glm::vec3 getVelocity();
 
         float getAngle_horizontal();
@@ -57,6 +62,8 @@ class Moveable{
         void fly_down(); // ustawia składową y wektora prędkości
 
         bool move(float T, std::vector<Wall*>& obstacles); // przemieszcza obiekt zgodnie z wektorem i wartością predkości
+        void fall(float T, std::vector<Wall*>& obstacles); // przemieszcza obiekt w dół, symulując spadanie
+        void jump(); // nadaje obiektowi prędkość wzdłuż osi OY
 };
 
 class Observer : public Moveable{
@@ -70,9 +77,7 @@ class Observer : public Moveable{
         float getAngle_vertical();
         void change_angle_vertical(float dAlpha);
         glm::vec3 getLookAtPoint(); // wzraca punkt w odległości 1 od obserwatora, na który jest skierowany jego wzrok
+        glm::vec3 getCameraPosition(); // wzraca punkt, w którym znajduje się 'kamera' obserwatora
 };  
-
-
-
 
 #endif

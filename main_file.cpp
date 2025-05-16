@@ -24,10 +24,12 @@ unsigned short screenwidth = 500;
 unsigned short screenheight = 500;
 float aspectRatio = 1.0;
 bool cursor_centred = true;
+bool gravity_on = true;
 
 std::vector<GLuint> TEXTURES;
 std::vector<Wall_rect> obstacles_rect;
 std::vector<Wall_trian> obstacles_tr;
+std::vector<Ramp> ramps;
 std::vector<Wall*> OBSTACLES;
 Wall_creator wall_creator;
 Observer obserwator;
@@ -214,10 +216,10 @@ void key_repetition(GLFWwindow* window, int key, int scancode, int action, int m
                         else if(GLFW_PRESS==glfwGetKey(window, KEY_MOVE_LEFT)) obserwator.speedup_backward_left();
                         else obserwator.speedup_backward();
                 }
-                else if(key==KEY_FLY_DOWN){
+                else if(key==KEY_FLY_DOWN && !gravity_on){
                         obserwator.fly_down();
                 }	
-                else if(key==KEY_FLY_UP){
+                else if(key==KEY_FLY_UP && !gravity_on){
                         obserwator.fly_up();
                 }
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -238,10 +240,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 else if(key == KEY_MOVE_BACKWARD){
                         obserwator.speedup_backward();	
                 }
-                else if(key==KEY_FLY_DOWN){
+                else if(key==KEY_FLY_DOWN && !gravity_on){
                         obserwator.fly_down();
                 }
-                else if(key==KEY_FLY_UP){
+                else if(key==KEY_FLY_UP && !gravity_on){
                         obserwator.fly_up();
                 }
                 else if(key == KEY_OPEN_CLOSE_MENU){
@@ -250,13 +252,19 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 }
                 else if(wall_creator.is_creating_wall) key_callback_wall_creation(window, key, scancode, action, mod);
                 else if(key == KEY_CREATE_WALL) wall_creator.is_creating_wall = true;
+                else if(key==KEY_TURN_ON_OFF_GRAVITY){
+                        gravity_on = !gravity_on;
+                        obserwator.setVelocity(glm::vec3(0.0, 0.0, 0.0));
+                }
+                else if(key==KEY_MOVE_JUMP)  obserwator.jump();
 
 		std::thread t(key_repetition, window, key, scancode, action, mod);
 		t.detach(); 
         }
         else if(action == GLFW_RELEASE){
                 if(key == KEY_MOVE_LEFT || key == KEY_MOVE_RIGHT || key == KEY_MOVE_FORWARD || key == KEY_MOVE_BACKWARD || key == KEY_FLY_DOWN || key == KEY_FLY_UP){
-                        obserwator.setVelocity(glm::vec3(0.0, 0.0, 0.0));
+                        if(gravity_on) obserwator.setVelocity_horizontal(glm::vec2(0.0, 0.0));
+                        else obserwator.setVelocity(glm::vec3(0.0, 0.0, 0.0));
                 }
         }
 }
@@ -314,6 +322,7 @@ void initOpenGLProgram(GLFWwindow* window) {
         glfwSetCursorPos(window, screenwidth/2, screenheight/2);
 
         TEXTURES.push_back(readTexture("assests/textures/marble.png"));
+        TEXTURES.push_back(readTexture("assests/textures/bricks.png"));
         wall_creator.assign_next_texture(TEXTURES);
         sp = new ShaderProgram("v_test.glsl", NULL, "f_test.glsl");
 }
@@ -335,25 +344,38 @@ void prepareScene(){
         Wall_rect mur;
         mur = Wall_rect(2, 0, 3, 1, 5, 7);
         mur.setAngle_horizontal(PI/6);
-        mur.setAngle_vertical(PI/3);
+        mur.setAngle_vertical(0);
         mur.setTexture(TEXTURES[0]);
         obstacles_rect.push_back(mur);
 
-        Wall_trian murek = Wall_trian(glm::vec3(6.0, 0.0, 6.0), 3, 4, 5, PI*0.80);
-        murek.setAngle_vertical(PI/6);
-        murek.setAngle_horizontal(PI/3);
+        Wall_trian murek = Wall_trian(glm::vec3(6.0, 0.0, 6.0), 3, 4, 5, PI/2);
+        murek.setAngle_vertical(PI/2);
+        //murek.setAngle_horizontal(PI/2);
         murek.setTexture(TEXTURES[0]);
         obstacles_tr.push_back(murek);
 
+        Ramp rampa(glm::vec3(0.0, 0.0, 0.0), 2, 5, 7.5);
+        rampa.setTexture(TEXTURES[0]);
+        ramps.push_back(rampa);
+
+        rampa = Ramp(glm::vec3(-10.0, 0.0, -10.0), 3, 3, 3*sqrt(3)-1);
+        rampa.setTexture(TEXTURES[0]);
+        ramps.push_back(rampa);
+
+        rampa = Ramp(glm::vec3(-20.0, 0.0, -20.0), 3, 3, 3*sqrt(3)+1);
+        rampa.setTexture(TEXTURES[0]);
+        ramps.push_back(rampa);
+
         for(unsigned int i=0;i<obstacles_rect.size();i++) OBSTACLES.push_back(&obstacles_rect[i]);
         for(unsigned int i=0;i<obstacles_tr.size();i++) OBSTACLES.push_back(&obstacles_tr[i]);
+        for(unsigned int i=0;i<ramps.size();i++) OBSTACLES.push_back(&ramps[i]);
 }
 
 void drawScene(GLFWwindow* window) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //Wyczyść bufor koloru i bufor głębokości
 
         glm::mat4 M = glm::mat4(1.0f); //Zainicjuj macierz modelu macierzą jednostkową
-        glm::mat4 V = glm::lookAt(obserwator.getPosition(), obserwator.getLookAtPoint(), glm::vec3(0.0f, 1.0f, 0.0f)); //Wylicz macierz widoku
+        glm::mat4 V = glm::lookAt(obserwator.getCameraPosition(), obserwator.getLookAtPoint(), glm::vec3(0.0f, 1.0f, 0.0f)); //Wylicz macierz widoku
         glm::mat4 P = glm::perspective(glm::radians(50.0f), aspectRatio, 0.01f, 50.0f); //Wylicz macierz rzutowania
 
         for(unsigned int i=0;i<OBSTACLES.size();i++) OBSTACLES[i]->draw(P, V, spLambertSun);
@@ -404,6 +426,7 @@ int main(void){
                 glfwPollEvents(); //Wykonaj procedury callback w zalezności od zdarzeń jakie zaszły.
                 printf("pos= %f %f %f\nlookAt %f %f %f\nah=%f,  av=%f\n\n", obserwator.getPosition().x, obserwator.getPosition().y, obserwator.getPosition().z, obserwator.getLookAtPoint().x, obserwator.getLookAtPoint().y, obserwator.getLookAtPoint().z, obserwator.getAngle_horizontal(), obserwator.getAngle_vertical());
 
+                if(gravity_on) obserwator.fall(dt, OBSTACLES);
                 obserwator.move(dt, OBSTACLES);
         }
 

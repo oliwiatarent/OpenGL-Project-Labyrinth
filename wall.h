@@ -30,13 +30,13 @@ class Wall{ // abstrakcyjna klasa do tworzenia graniastosłupów o różnych pod
 
         virtual void wall_initializer() = 0; // metoda inicjalizująca, wywoływana w konstruktorach
         virtual void skaluj(float tab[], unsigned int start, unsigned int stop, unsigned int step, float mnoznik) = 0; // metoda do modyfikacji współrzędnych teksturowania, by były odpowiednio rozciągnięte na obiekcie
-        virtual void shape_triangle(float vertices[], float normals[]) = 0; // metoda nadająca odpowiedni kształt trójkątnej podstawie graniastosłupa
 
     public:
         virtual void setAngle_horizontal(float alpha) = 0;
         virtual void setAngle_vertical(float alpha) = 0;
         virtual void setTexture(GLuint texture_id) = 0;
         virtual void draw(glm::mat4 P, glm::mat4 V, ShaderProgram* s_p) = 0; // metoda rysująca
+        virtual char getType() = 0; // metoda służąca do identyfiakcji typu obiektu (przy posługiwaniu się wskaźnikiem)
 
         virtual bool is_within(glm::vec3 punkt, float radius) = 0; // metoda sprawdzająca, czy jakikolwiek punkt w odległości 'radius' od 'punkt' znajduje się wewnątrz bryły
 };
@@ -57,13 +57,14 @@ class Wall_rect : public Wall{
         void setAngle_vertical(float alpha);
         void setTexture(GLuint texture_id);
         void draw(glm::mat4 P, glm::mat4 V, ShaderProgram* s_p);
+        char getType(); // 0
 
         bool is_within(glm::vec3 punkt, float radius);
 };
 
 class Wall_trian : public Wall{
     protected:
-        void shape_triangle(float vertices[], float normals[]);
+        void shape_triangle(float vertices[], float normals[]); // metoda nadająca odpowiedni kształt trójkątnej podstawie graniastosłupa
         void wall_initializer();
         void skaluj(float tab[], unsigned int start, unsigned int stop, unsigned int step, float mnoznik);
 
@@ -74,7 +75,26 @@ class Wall_trian : public Wall{
         void setAngle_vertical(float alpha);
         void setTexture(GLuint texture_id);
         void draw(glm::mat4 P, glm::mat4 V, ShaderProgram* s_p);
+        char getType(); // 1
         bool is_within(glm::vec3 punkt, float radius);
+};
+
+class Ramp : public Wall_trian{
+    protected:
+        void wall_initializer(); // metoda inicjalizująca, wywoływana w konstruktorach
+        void skaluj(float tab[], unsigned int start, unsigned int stop, unsigned int step, float mnoznik); // metoda do modyfikacji współrzędnych teksturowania, by były odpowiednio rozciągnięte na obiekcie
+    
+    public:
+        Ramp(glm::vec3 punkt, float w, float l, float h); 
+
+        void setAngle_horizontal(float alpha);
+        void setAngle_vertical(float alpha);
+        void setTexture(GLuint texture_id);
+        void draw(glm::mat4 P, glm::mat4 V, ShaderProgram* s_p); // metoda rysująca
+        char getType(); // 2
+
+        bool is_within(glm::vec3 punkt, float radius); // metoda sprawdzająca, czy jakikolwiek punkt w odległości 'radius' od 'punkt' znajduje się wewnątrz bryły
+        float getRampAngleRatio();
 };
 
 class Wall_creator{ // Klasa tworząca manualnie nowe obiekty typu Wall_rect oraz Wall_trian
@@ -124,6 +144,5 @@ class Wall_creator{ // Klasa tworząca manualnie nowe obiekty typu Wall_rect ora
         void finish_wall_creation(std::vector<Wall*>& obstacles); // kończy modyfikację obiektu i go zapamiętuje
         void abort_wall_creation(); // kończy modyfikację obiektu bez zapisywania
 };
-
 
 #endif
