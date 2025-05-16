@@ -207,7 +207,11 @@ bool Moveable::move(float T, std::vector<Wall*>& obstacles){
         bool climbing = false;
         for(unsigned short s=1;s<=climbing_samples;s++){
             new_position_down.y += tan(maxClimbAngle)*T*velocity_value/(float)climbing_samples;
-            new_position_up.y += tan(maxClimbAngle)*T*velocity_value/(float)climbing_samples;
+            //new_position_down.x -= (position.x - new_position_down.x)/10;
+            //new_position_down.z -= (position.z - new_position_down.z)/10;
+
+            new_position_up = new_position_down;
+            new_position_up.y += height;
 
             if(!(obstacles[i]->is_within(new_position_down, radius) || obstacles[i]->is_within(new_position_up, radius))){
                 climbing = true;
