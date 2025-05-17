@@ -1,5 +1,9 @@
 #include "moveable.h"
 
+#define maxClimbAngle 3.14/3
+#define std_grav 9.81
+#define climbing_samples 5
+
 // MOVEABLE -------------------------------------------------------------------------------------------------------------
 void Moveable::move_along_obstacle(float T, std::vector<Wall*>& obstacles){
     glm::vec3 original_velocity = velocity;
@@ -14,15 +18,44 @@ void Moveable::move_along_obstacle(float T, std::vector<Wall*>& obstacles){
 }
 
 bool Moveable::move_along_obstacle_util(float T, std::vector<Wall*>& obstacles){
-    glm::vec3 new_position = position + velocity * T;
+    glm::vec3 new_position_down = position + velocity * T;
+    glm::vec3 new_position_up = new_position_down;
+    new_position_up.y += height;
     bool new_position_valid = true;
 
-    for(unsigned int i=0;i<obstacles.size();i++) if(obstacles[i]->is_within(new_position, radius)){
+    for(unsigned int i=0;i<obstacles.size();i++) if(obstacles[i]->is_within(new_position_down, radius) || obstacles[i]->is_within(new_position_up, radius)){
+        new_position_down.y += tan(maxClimbAngle)*T*velocity_value;
+        new_position_up.y += tan(maxClimbAngle)*T*velocity_value;
+        if(obstacles[i]->is_within(new_position_down, radius) || obstacles[i]->is_within(new_position_up, radius)){
+            new_position_down.y -= tan(maxClimbAngle)*T*velocity_value;
+            new_position_up.y -= tan(maxClimbAngle)*T*velocity_value;
+            new_position_valid = false;
+        }
         new_position_valid = false;
         break;
     }
-    if(new_position_valid) position = new_position;
+    if(new_position_valid) position = new_position_down;
     return new_position_valid;
+}
+
+bool Moveable::can_fall_down(float T, std::vector<Wall*>& obstacles){
+    glm::vec3 v(0.0, velocity.y, 0.0);
+    glm::vec3 new_position_down = position + v * T;
+    bool result = true;
+
+    in_air = true;
+    if(new_position_down.y < 0){
+        new_position_down.y = 0.0;
+        velocity.y = 0.0;
+        in_air = false;
+        result = false;
+    }
+    for(unsigned int i=0;i<obstacles.size();i++) if(obstacles[i]->is_within(new_position_down, radius)){
+        result = false;
+        in_air = false;
+        break;
+    }
+    return result;
 }
 
 Moveable::Moveable(){
@@ -59,6 +92,11 @@ void Moveable::setVelocity(glm::vec3 v){
     velocity = v;
 }
 
+void Moveable::setVelocity_horizontal(glm::vec2 v){
+    velocity.x = v.x;
+    velocity.z = v.y;
+}
+
 glm::vec3 Moveable::getVelocity(){
     return velocity;
 }
@@ -91,67 +129,59 @@ float Moveable::getRadius(){
 }
 
 void Moveable::speedup_forward(){
-    glm::vec3 v;
-    v.y = 0.0;
+    glm::vec2 v;
     v.x = cos(angle_horizontal) * velocity_value;
-    v.z = sin(angle_horizontal) * velocity_value;
-    setVelocity(v);
+    v.y = sin(angle_horizontal) * velocity_value;
+    setVelocity_horizontal(v);
 }
 
 void Moveable::speedup_backward(){
-    glm::vec3 v;
-    v.y = 0.0;
+    glm::vec2 v;
     v.x = -cos(angle_horizontal) * velocity_value;
-    v.z = -sin(angle_horizontal) * velocity_value;
-    setVelocity(v);
+    v.y = -sin(angle_horizontal) * velocity_value;
+    setVelocity_horizontal(v);
 }
 
 void Moveable::speedup_left(){
-    glm::vec3 v;
-    v.y = 0.0;
+    glm::vec2 v;
     v.x = sin(angle_horizontal) * velocity_value;
-    v.z = -cos(angle_horizontal) * velocity_value;
-    setVelocity(v);
+    v.y = -cos(angle_horizontal) * velocity_value;
+    setVelocity_horizontal(v);
 }
 
 void Moveable::speedup_right(){
-    glm::vec3 v;
-    v.y = 0.0;
+    glm::vec2 v;
     v.x = -sin(angle_horizontal) * velocity_value;
-    v.z = cos(angle_horizontal) * velocity_value;
-    setVelocity(v);
+    v.y = cos(angle_horizontal) * velocity_value;
+    setVelocity_horizontal(v);
 }
 
 void Moveable::speedup_forward_right(){
-    glm::vec3 v;
-    v.y = 0.0;
+    glm::vec2 v;
     v.x = cos(angle_horizontal) * velocity_value - sin(angle_horizontal) * velocity_value / 1.41;
-    v.z = sin(angle_horizontal) * velocity_value + cos(angle_horizontal) * velocity_value / 1.41;
-    setVelocity(v);
+    v.y = sin(angle_horizontal) * velocity_value + cos(angle_horizontal) * velocity_value / 1.41;
+    setVelocity_horizontal(v);
 }
 
 void Moveable::speedup_forward_left(){
-    glm::vec3 v;
-    v.y = 0.0;
+    glm::vec2 v;
     v.x = cos(angle_horizontal) * velocity_value + sin(angle_horizontal) * velocity_value / 1.41;
-    v.z = sin(angle_horizontal) * velocity_value - cos(angle_horizontal) * velocity_value / 1.41;
-    setVelocity(v);
+    v.y = sin(angle_horizontal) * velocity_value - cos(angle_horizontal) * velocity_value / 1.41;
+    setVelocity_horizontal(v);
 }
 
 void Moveable::speedup_backward_right(){
-    glm::vec3 v;
-    v.y = 0.0;
+    glm::vec2 v;
     v.x = -cos(angle_horizontal) * velocity_value - sin(angle_horizontal) * velocity_value / 1.41;
-    v.z = -sin(angle_horizontal) * velocity_value + cos(angle_horizontal) * velocity_value / 1.41;
-    setVelocity(v);
+    v.y = -sin(angle_horizontal) * velocity_value + cos(angle_horizontal) * velocity_value / 1.41;
+    setVelocity_horizontal(v);
 }
 
 void Moveable::speedup_backward_left(){
-    glm::vec3 v;
-    v.y = 0.0;
+    glm::vec2 v;
     v.x = -cos(angle_horizontal) * velocity_value + sin(angle_horizontal) * velocity_value / 1.41;
-    v.z = -sin(angle_horizontal) * velocity_value - cos(angle_horizontal) * velocity_value / 1.41;
-    setVelocity(v);
+    v.y = -sin(angle_horizontal) * velocity_value - cos(angle_horizontal) * velocity_value / 1.41;
+    setVelocity_horizontal(v);
 }
 
 void Moveable::fly_up(){
@@ -167,17 +197,51 @@ void Moveable::fly_down(){
 }
 
 bool Moveable::move(float T, std::vector<Wall*>& obstacles){
-    glm::vec3 new_position = position + velocity * T;
+    if(!can_fall_down(T, obstacles)) velocity.y = 0.0;
+    glm::vec3 new_position_down = position + velocity * T;
+    glm::vec3 new_position_up = new_position_down;
+    new_position_up.y += height;
     bool new_position_valid = true;
 
-    for(unsigned int i=0;i<obstacles.size();i++) if(obstacles[i]->is_within(new_position, radius)){
-        new_position_valid = false;
+    for(unsigned int i=0;i<obstacles.size();i++) if(obstacles[i]->is_within(new_position_down, radius) || obstacles[i]->is_within(new_position_up, radius)){
+        bool climbing = false;
+        for(unsigned short s=1;s<=climbing_samples;s++){
+            new_position_down.y += tan(maxClimbAngle)*T*velocity_value/(float)climbing_samples;
+            //new_position_down.x -= (position.x - new_position_down.x)/10;
+            //new_position_down.z -= (position.z - new_position_down.z)/10;
+
+            new_position_up = new_position_down;
+            new_position_up.y += height;
+
+            if(!(obstacles[i]->is_within(new_position_down, radius) || obstacles[i]->is_within(new_position_up, radius))){
+                climbing = true;
+                break;
+            }
+        }
+        if(!climbing){
+            new_position_down.y -= tan(maxClimbAngle)*T*velocity_value;
+            new_position_up.y -= tan(maxClimbAngle)*T*velocity_value;
+            new_position_valid = false;
+        }
+
+        in_air = false;
         break;
     }
 
-    if(new_position_valid) position = new_position;
-    else move_along_obstacle(T, obstacles);
+    if(new_position_valid) position = new_position_down;
+    else{
+        move_along_obstacle(T, obstacles);
+        velocity.y = 0.0;
+    } 
     return new_position_valid;
+}
+
+void Moveable::fall(float T, std::vector<Wall*>& obstacles){
+    velocity.y -= std_grav*T;
+}
+
+void Moveable::jump(){
+    if(!in_air) velocity.y += sqrt(2*std_grav*jump_height);
 }
 
 // OBSERVER ---------------------------------------------------------------------------------------------
@@ -211,5 +275,15 @@ glm::vec3 Observer::getLookAtPoint(){
     pointOnSphere.y = sin(angle_vertical);
     pointOnSphere.x = cos(angle_horizontal) * cos(angle_vertical);
     pointOnSphere.z = sin(angle_horizontal) * cos(angle_vertical);
-    return position + pointOnSphere;
+    return getCameraPosition() + pointOnSphere;
 }
+
+glm::vec3 Observer::getCameraPosition(){
+    glm::vec3 camera_position = position;
+    camera_position.y += height;
+    return camera_position;
+}
+
+#undef maxClimbAngle
+#undef std_grav
+#undef climbing_samples

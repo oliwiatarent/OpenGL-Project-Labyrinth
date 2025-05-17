@@ -1,4 +1,5 @@
 #include "wall.h"
+#define PI 3.14159265359
 
 void Wall_rect::wall_initializer(){
     static float verts[]={
@@ -128,17 +129,16 @@ void Wall_rect::wall_initializer(){
     TEX_COORDS = new float[72];
     for(unsigned short i=0;i<72;i++) TEX_COORDS[i] = texCoords[i];
 
-    skaluj(TEX_COORDS, 1, 72, 2, h);
-    skaluj(TEX_COORDS, 0, 48, 2, l);
+    skaluj(TEX_COORDS, 1, 24, 2, h);
+    skaluj(TEX_COORDS, 49, 72, 2, h);
+    skaluj(TEX_COORDS, 0, 24, 2, l);
     skaluj(TEX_COORDS, 48, 72, 2, w);
+    skaluj(TEX_COORDS, 24, 48, 2, l);
+    skaluj(TEX_COORDS, 25, 48, 2, w);
 }
 
 void Wall_rect::skaluj(float tab[], unsigned int start, unsigned int stop, unsigned int step, float mnoznik){
     for(unsigned i=start;i<stop;i += step) tab[i] *= mnoznik;
-}
-
-void Wall_rect::shape_triangle(float vertices[], float normals[]){
-
 }
 
 Wall_rect::Wall_rect(){
@@ -173,12 +173,21 @@ void Wall_rect::setAngle_horizontal(float alpha){
     this->angle_horizontal = alpha;
 }
 
-void Wall_rect::draw(glm::mat4 P, glm::mat4 V, GLuint tex, ShaderProgram* s_p){
+void Wall_rect::setAngle_vertical(float alpha){
+    this->angle_vertical = alpha;
+}
+
+void Wall_rect::setTexture(GLuint texture_id){
+    this->texture_id = texture_id;
+}
+
+void Wall_rect::draw(glm::mat4 P, glm::mat4 V, ShaderProgram* s_p){
     s_p->use(); //Aktywuj program cieniujący
     glm::mat4 M = glm::mat4(1.0f);
 
     M = glm::translate(M, DBL);
-    M = glm::rotate(M, -angle_horizontal, glm::vec3(0.0, 3.0, 0.0));
+    M = glm::rotate(M, -angle_horizontal, glm::vec3(0.0, 1.0, 0.0));
+    M = glm::rotate(M, (float)(angle_vertical), glm::vec3(0.0, 0.0, 1.0));
     M = glm::translate(M, -DBL);
     M = glm::scale(M, glm::vec3(l, h, w)*glm::vec3(0.5, 0.5, 0.5));
     M = glm::translate(M, glm::vec3(1, 1, 1 ));
@@ -197,7 +206,7 @@ void Wall_rect::draw(glm::mat4 P, glm::mat4 V, GLuint tex, ShaderProgram* s_p){
     glVertexAttribPointer(s_p->a("normal"),4,GL_FLOAT,false,0,NORMALS);
     glVertexAttribPointer(s_p->a("texCoord"),2,GL_FLOAT,false,0,TEX_COORDS);
     
-    glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D,tex);
+    glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, texture_id);
     glUniform1i(s_p->u("tex"),0);
     glDrawArrays( GL_TRIANGLES, 0, VERTEX_COUNT);
 
@@ -206,16 +215,16 @@ void Wall_rect::draw(glm::mat4 P, glm::mat4 V, GLuint tex, ShaderProgram* s_p){
     glDisableVertexAttribArray(s_p->a("texCoord")); 
 }
 
+char Wall_rect::getType(){
+    return 0;
+}
+
 bool Wall_rect::is_within(glm::vec3 punkt, float r){
     glm::vec3 _punkt; // punkt w układzie współrzędnych muru
-    _punkt.x = (punkt.x - DBL.x)*cos(angle_horizontal) + (punkt.z - DBL.z)*sin(angle_horizontal);
     _punkt.z = -(punkt.x - DBL.x)*sin(angle_horizontal) + (punkt.z - DBL.z)*cos(angle_horizontal);
-    _punkt.y = punkt.y;
-
-    if(_punkt.x + r > 0 && _punkt.z + r > 0 && _punkt.y > DBL.y && _punkt.x-r < l && _punkt.z-r < w && _punkt.y < DBL.y + h){
-        return true;
-    }
-    else return false;
+    _punkt.y = -(punkt.x - DBL.x)*cos(angle_horizontal)*sin(angle_vertical) + (punkt.y - DBL.y)*cos(angle_vertical) - (punkt.z - DBL.z)*sin(angle_horizontal)*sin(angle_vertical);
+    _punkt.x = (punkt.x - DBL.x)*cos(angle_horizontal)*cos(angle_vertical) + (punkt.y - DBL.y)*sin(angle_vertical) + (punkt.z - DBL.z)*sin(angle_horizontal)*cos(angle_vertical);
+    return _punkt.x + r > 0 && _punkt.z + r > 0 && _punkt.y+r > 0 && _punkt.x-r < l && _punkt.z-r < w && _punkt.y-r < h;
 }
 
 //Wall_traingular ---------------------------------------------------
@@ -370,13 +379,14 @@ Wall_trian::Wall_trian(){
     wall_initializer();
 }
 
-Wall_trian::Wall_trian(glm::vec3 punkt, float a, float b, float h, float gamma, float angle_horizontal){
+Wall_trian::Wall_trian(glm::vec3 punkt, float a, float b, float h, float gamma){
     this->DBL = punkt;
     this->h = h;
     this->w = a;
     this->l = b;
     this->gamma = gamma;
     this->angle_horizontal = angle_horizontal;
+    this->angle_vertical = 0;
     wall_initializer();
 }
 
@@ -384,13 +394,21 @@ void Wall_trian::setAngle_horizontal(float alpha){
     angle_horizontal = alpha;
 }
 
-void Wall_trian::draw(glm::mat4 P, glm::mat4 V, GLuint tex, ShaderProgram* s_p){
+void Wall_trian::setAngle_vertical(float alpha){
+    this->angle_vertical = alpha;
+}
+
+void Wall_trian::setTexture(GLuint texture_id){
+    this->texture_id = texture_id;
+}
+
+void Wall_trian::draw(glm::mat4 P, glm::mat4 V, ShaderProgram* s_p){
     s_p->use(); //Aktwuj program cieniujący
     glm::mat4 M = glm::mat4(1.0);
 
     M = glm::translate(M, DBL);
     M = glm::rotate(M, (float)(-angle_horizontal), glm::vec3(0.0, 1.0, 0.0));
-    //M = glm::rotate(M, (float)(3.14159265359), glm::vec3(1.0, 0.0, 0.0));
+    M = glm::rotate(M, angle_vertical, glm::vec3(0.0, 0.0, 1.0));
     M = glm::scale(M, glm::vec3(w, h, w));
 
 
@@ -406,7 +424,7 @@ void Wall_trian::draw(glm::mat4 P, glm::mat4 V, GLuint tex, ShaderProgram* s_p){
     glVertexAttribPointer(s_p->a("normal"),4,GL_FLOAT,false,0,NORMALS);
     glVertexAttribPointer(s_p->a("texCoord"),2,GL_FLOAT,false,0,TEX_COORDS);
     
-    glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D,tex);
+    glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, texture_id);
     glUniform1i(s_p->u("tex"),0);
     glDrawArrays( GL_TRIANGLES, 0, VERTEX_COUNT);
 
@@ -415,17 +433,65 @@ void Wall_trian::draw(glm::mat4 P, glm::mat4 V, GLuint tex, ShaderProgram* s_p){
     glDisableVertexAttribArray(s_p->a("texCoord")); 
 }
 
-bool Wall_trian::is_within(glm::vec3 punkt, float radius){
+char Wall_trian::getType(){
+    return 1;
+}
+
+bool Wall_trian::is_within(glm::vec3 punkt, float r){
     glm::vec3 _punkt; // punkt w układzie współrzędnych muru
-    _punkt.x = (punkt.x - DBL.x)*cos(angle_horizontal) + (punkt.z - DBL.z)*sin(angle_horizontal);
     _punkt.z = -(punkt.x - DBL.x)*sin(angle_horizontal) + (punkt.z - DBL.z)*cos(angle_horizontal);
-    _punkt.y = punkt.y;
+    _punkt.y = -(punkt.x - DBL.x)*cos(angle_horizontal)*sin(angle_vertical) + (punkt.y - DBL.y)*cos(angle_vertical) - (punkt.z - DBL.z)*sin(angle_horizontal)*sin(angle_vertical);
+    _punkt.x = (punkt.x - DBL.x)*cos(angle_horizontal)*cos(angle_vertical) + (punkt.y - DBL.y)*sin(angle_vertical) + (punkt.z - DBL.z)*sin(angle_horizontal)*cos(angle_vertical);
 
-    float ht = l*sin(gamma);
-    float dt = -ht * tan(gamma - 3.14159265359/2);
-    if(_punkt.y > DBL.y && _punkt.y < DBL.y + h && _punkt.z > -radius && radius > _punkt.z*dt-_punkt.x*ht && -radius < _punkt.z*(dt-w) - (_punkt.x-w)*ht) return true;
+    glm::vec2 C(l*sin(gamma+PI/2), l*cos(gamma-PI/2));
+    return _punkt.y+r > 0 && _punkt.y-r < h && _punkt.z+r > 0 && (_punkt.z)*(C.x) - (C.y)*(_punkt.x)-r < 0 && (_punkt.z)*(C.x-w) - (C.y)*(_punkt.x - w)+r > 0;
+}
+//Ramp ----------------------------------------------------------------------------------------------------------------
 
-    return false;
+void Ramp::wall_initializer(){
+    Wall_trian::wall_initializer();
+}
+
+void Ramp::skaluj(float tab[], unsigned int start, unsigned int stop, unsigned int step, float mnoznik){
+    Wall_trian::skaluj(tab, start, stop, step, mnoznik);
+}
+
+Ramp::Ramp(glm::vec3 punkt, float a, float b, float h){
+    this->DBL = punkt;
+    this->h = a;
+    this->l = b;
+    this->w = h;
+    this->gamma = PI/2;
+    this->angle_vertical = PI/2;
+    wall_initializer();
+}
+
+void Ramp::setAngle_horizontal(float alpha){
+    Wall_trian::setAngle_horizontal(alpha);
+}
+
+void Ramp::setAngle_vertical(float alpha){
+
+}
+
+void Ramp::setTexture(GLuint texture_id){
+    Wall_trian::setTexture(texture_id);
+}
+
+void Ramp::draw(glm::mat4 P, glm::mat4 V, ShaderProgram* s_p){
+    Wall_trian::draw(P, V, s_p);
+}
+
+char Ramp::getType(){
+    return 2;
+}
+
+bool Ramp::is_within(glm::vec3 punkt, float radius){
+    return Wall_trian::is_within(punkt, radius);
+}
+
+float Ramp::getRampAngleRatio(){
+    return h/l;
 }
 
 //Wall_creator --------------------------------------------------------------------------------------------------------
@@ -433,10 +499,15 @@ void Wall_creator::set_current_wall(){
     if(current_wall_creation_type==0){
         current_wall_rect = Wall_rect(DBL.x, DBL.y, DBL.z, l, h, w);
         current_wall_rect.setAngle_horizontal(angle_horizontal);
+        current_wall_rect.setAngle_vertical(angle_vertical);
+        current_wall_rect.setTexture(texture_id);
         current_wall = &current_wall_rect;
     }
     else if(current_wall_creation_type==1){
-        current_wall_trian = Wall_trian(DBL, l, w, h, gamma, angle_horizontal);
+        current_wall_trian = Wall_trian(DBL, l, w, h, gamma);
+        current_wall_trian.setAngle_horizontal(angle_horizontal);
+        current_wall_trian.setAngle_vertical(angle_vertical);
+        current_wall_trian.setTexture(texture_id);
         current_wall = &current_wall_trian;
     }
 }
@@ -444,17 +515,27 @@ void Wall_creator::set_current_wall(){
 Wall_creator::Wall_creator(){
     walls_rect = new Wall_rect[1000];
     walls_trian = new Wall_trian[1000];
-    setArguments(glm::vec3(0.0, 0.0, 0.0), 1.0, 1.0, 1.0, 0.78, 0.0);
+    setArguments(glm::vec3(0.0, 0.0, 0.0), 1.0, 1.0, 1.0, 0.78, 0.0, 0.0);
 }
 
-void Wall_creator::setArguments(glm::vec3 DBL, float length, float width, float height, float gamma, float angle_horizontal){
+void Wall_creator::setArguments(glm::vec3 DBL, float length, float width, float height, float gamma, float angle_horizontal, float angle_vertical){
     this->DBL = DBL;
     l = length;
     w = width;
     h = height;
     this->gamma = gamma;
     this->angle_horizontal = angle_horizontal;
+    this->angle_vertical = angle_vertical;
+    this->texture_id = texture_id;
     current_wall_creation_type = 0;
+    set_current_wall();
+}
+
+void Wall_creator::assign_next_texture(std::vector<GLuint>& textures){
+    static unsigned int ptr = 0;
+    this->texture_id = textures[ptr];
+    ptr++;
+    ptr %= textures.size();
     set_current_wall();
 }
 
@@ -516,6 +597,11 @@ void Wall_creator::changeAngle_horizontal(float dx){
     set_current_wall();
 }
 
+void Wall_creator::changeAngle_vertical(float dx){
+    angle_vertical += dx;
+    set_current_wall();
+}
+
 void Wall_creator::finish_wall_creation(std::vector<Wall*>& obstacles){
     is_creating_wall = false;
     if(current_wall_creation_type==0){
@@ -526,10 +612,12 @@ void Wall_creator::finish_wall_creation(std::vector<Wall*>& obstacles){
         walls_trian[walls_trian_ptr++] = current_wall_trian;
         obstacles.push_back(&walls_trian[walls_trian_ptr-1]);
     }
-    setArguments(glm::vec3(0.0, 0.0, 0.0), 1.0, 1.0, 1.0, 0.78, 0.0);
+    setArguments(glm::vec3(0.0, 0.0, 0.0), 1.0, 1.0, 1.0, 0.78, 0.0, 0.0);
 }
 
 void Wall_creator::abort_wall_creation(){
     is_creating_wall = false;
-    setArguments(glm::vec3(0.0, 0.0, 0.0), 1.0, 1.0, 1.0, 0.78, 0.0);
+    setArguments(glm::vec3(0.0, 0.0, 0.0), 1.0, 1.0, 1.0, 0.78, 0.0, 0.0);
 }
+
+#undef PI

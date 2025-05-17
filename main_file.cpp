@@ -29,10 +29,12 @@ unsigned short screenwidth = 500;
 unsigned short screenheight = 500;
 float aspectRatio = 1.0;
 bool cursor_centred = true;
+bool gravity_on = true;
 
-GLuint tex;
+std::vector<GLuint> TEXTURES;
 std::vector<Wall_rect> obstacles_rect;
 std::vector<Wall_trian> obstacles_tr;
+std::vector<Ramp> ramps;
 std::vector<Wall*> OBSTACLES;
 Wall_creator wall_creator;
 Observer obserwator;
@@ -80,10 +82,10 @@ void key_repetition_wall_creation(GLFWwindow* window, int key, int scancode, int
                 else if(key==KEY_DEC_WALL_GAMMA){
                         wall_creator.changeGamma(-dg);
                 }
-                else if(key==KEY_ROTATE_WALL_LEFT){
+                else if(key==KEY_ROTATE_WALL_Y_LEFT){
                         wall_creator.changeAngle_horizontal(dg);
                 }
-                else if(key==KEY_ROTATE_WALL_RIGHT){
+                else if(key==KEY_ROTATE_WALL_Y_RIGHT){
                         wall_creator.changeAngle_horizontal(-dg);
                 }
                 else if(key==KEY_INC_WALL_LENGTH){
@@ -103,6 +105,15 @@ void key_repetition_wall_creation(GLFWwindow* window, int key, int scancode, int
                 }
                 else if(key==KEY_DEC_WALL_HEIGHT){
                         wall_creator.changeHeight(-dx);
+                }
+                else if(key==KEY_ROTATE_WALL_Z_LEFT){
+                        wall_creator.changeAngle_vertical(dg);
+                }
+                else if(key==KEY_ROTATE_WALL_Z_RIGHT){
+                        wall_creator.changeAngle_vertical(-dg);
+                }
+                else if(key==KEY_ASSIGN_WALL_NEXT_TEXTURE){
+                        wall_creator.assign_next_texture(TEXTURES);
                 }
 		std::this_thread::sleep_for(std::chrono::milliseconds(50));
 	}
@@ -147,10 +158,10 @@ void key_callback_wall_creation(GLFWwindow* window, int key, int scancode, int a
         else if(key==KEY_DEC_WALL_GAMMA){
                 wall_creator.changeGamma(-dg);
         }
-        else if(key==KEY_ROTATE_WALL_LEFT){
+        else if(key==KEY_ROTATE_WALL_Y_LEFT){
                 wall_creator.changeAngle_horizontal(dg);
         }
-        else if(key==KEY_ROTATE_WALL_RIGHT){
+        else if(key==KEY_ROTATE_WALL_Y_RIGHT){
                 wall_creator.changeAngle_horizontal(-dg);
         }
         else if(key==KEY_INC_WALL_LENGTH){
@@ -170,6 +181,18 @@ void key_callback_wall_creation(GLFWwindow* window, int key, int scancode, int a
         }
         else if(key==KEY_DEC_WALL_HEIGHT){
                 wall_creator.changeHeight(-dx);
+        }
+        else if(key==KEY_ROTATE_WALL_Z_LEFT){
+                wall_creator.changeAngle_vertical(dg);
+        }
+        else if(key==KEY_ROTATE_WALL_Z_RIGHT){
+                wall_creator.changeAngle_vertical(-dg);
+        }
+        else if(key==KEY_ROTATE_WALL_Z_RIGHT){
+                wall_creator.changeAngle_vertical(-dg);
+        }
+        else if(key==KEY_ASSIGN_WALL_NEXT_TEXTURE){
+                wall_creator.assign_next_texture(TEXTURES);
         }
         std::thread t(key_repetition_wall_creation, window, key, scancode, action, mod);
         t.detach(); 
@@ -198,10 +221,10 @@ void key_repetition(GLFWwindow* window, int key, int scancode, int action, int m
                         else if(GLFW_PRESS==glfwGetKey(window, KEY_MOVE_LEFT)) obserwator.speedup_backward_left();
                         else obserwator.speedup_backward();
                 }
-                else if(key==KEY_FLY_DOWN){
+                else if(key==KEY_FLY_DOWN && !gravity_on){
                         obserwator.fly_down();
                 }	
-                else if(key==KEY_FLY_UP){
+                else if(key==KEY_FLY_UP && !gravity_on){
                         obserwator.fly_up();
                 }
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -222,10 +245,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 else if(key == KEY_MOVE_BACKWARD){
                         obserwator.speedup_backward();	
                 }
-                else if(key==KEY_FLY_DOWN){
+                else if(key==KEY_FLY_DOWN && !gravity_on){
                         obserwator.fly_down();
                 }
-                else if(key==KEY_FLY_UP){
+                else if(key==KEY_FLY_UP && !gravity_on){
                         obserwator.fly_up();
                 }
                 else if(key == KEY_OPEN_CLOSE_MENU){
@@ -234,13 +257,19 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 }
                 else if(wall_creator.is_creating_wall) key_callback_wall_creation(window, key, scancode, action, mod);
                 else if(key == KEY_CREATE_WALL) wall_creator.is_creating_wall = true;
+                else if(key==KEY_TURN_ON_OFF_GRAVITY){
+                        gravity_on = !gravity_on;
+                        obserwator.setVelocity(glm::vec3(0.0, 0.0, 0.0));
+                }
+                else if(key==KEY_MOVE_JUMP)  obserwator.jump();
 
 		std::thread t(key_repetition, window, key, scancode, action, mod);
 		t.detach(); 
         }
         else if(action == GLFW_RELEASE){
                 if(key == KEY_MOVE_LEFT || key == KEY_MOVE_RIGHT || key == KEY_MOVE_FORWARD || key == KEY_MOVE_BACKWARD || key == KEY_FLY_DOWN || key == KEY_FLY_UP){
-                        obserwator.setVelocity(glm::vec3(0.0, 0.0, 0.0));
+                        if(gravity_on) obserwator.setVelocity_horizontal(glm::vec2(0.0, 0.0));
+                        else obserwator.setVelocity(glm::vec3(0.0, 0.0, 0.0));
                 }
         }
 }
@@ -297,7 +326,9 @@ void initOpenGLProgram(GLFWwindow* window) {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         glfwSetCursorPos(window, screenwidth/2, screenheight/2);
 
-        tex = readTexture("assests/textures/bricks.png");
+        TEXTURES.push_back(readTexture("assests/textures/marble.png"));
+        TEXTURES.push_back(readTexture("assests/textures/bricks.png"));
+        wall_creator.assign_next_texture(TEXTURES);
         sp = new ShaderProgram("v_test.glsl", NULL, "f_test.glsl");
 }
 
@@ -305,7 +336,7 @@ void initOpenGLProgram(GLFWwindow* window) {
 void freeOpenGLProgram(GLFWwindow* window) {
         freeShaders();
         //************Tutaj umieszczaj kod, który należy wykonać po zakończeniu pętli głównej************
-        glDeleteTextures(1, &tex);
+        for(unsigned int i=0;i<TEXTURES.size();i++) glDeleteTextures(1, &TEXTURES[i]);
 }
 
 void prepareMoveables(){
@@ -346,32 +377,17 @@ void prepareScene() {
 
                 file.close();
         }
-
-        for(unsigned int i=0;i<obstacles_rect.size();i++) OBSTACLES.push_back(&obstacles_rect[i]);
-        for(unsigned int i=0;i<obstacles_tr.size();i++) OBSTACLES.push_back(&obstacles_tr[i]);
 }
 
 void drawScene(GLFWwindow* window) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //Wyczyść bufor koloru i bufor głębokości
 
         glm::mat4 M = glm::mat4(1.0f); //Zainicjuj macierz modelu macierzą jednostkową
-        glm::mat4 V = glm::lookAt(obserwator.getPosition(), obserwator.getLookAtPoint(), glm::vec3(0.0f, 1.0f, 0.0f)); //Wylicz macierz widoku
+        glm::mat4 V = glm::lookAt(obserwator.getCameraPosition(), obserwator.getLookAtPoint(), glm::vec3(0.0f, 1.0f, 0.0f)); //Wylicz macierz widoku
         glm::mat4 P = glm::perspective(glm::radians(50.0f), aspectRatio, 0.01f, 50.0f); //Wylicz macierz rzutowania
 
-        for(unsigned int i=0;i<OBSTACLES.size();i++) OBSTACLES[i]->draw(P, V, tex, spLambertSun);
-        if(wall_creator.is_creating_wall) wall_creator.current_wall->draw(P, V, tex, spLambertSun);
-
-        /*
-        M = glm::mat4(1.0f); //Zainicjuj macierz modelu macierzą jednostkową
-        M = glm::translate(M, glm::vec3(2, -1, 3));
-        M = glm::scale(M, glm::vec3(0.1, 0.1, 0.1));
-	spLambert->use();//Aktywacja programu cieniującego
-	glUniform4f(spLambert->u("color"), 0.9, 0.6, 0.6, 1);
-	glUniformMatrix4fv(spConstant->u("M"),1,false,glm::value_ptr(M));
-        glUniformMatrix4fv(spConstant->u("P"),1,false,glm::value_ptr(P));
-	glUniformMatrix4fv(spConstant->u("V"),1,false,glm::value_ptr(V));
-        Models::teapot.drawSolid();
-        */
+        for(unsigned int i=0;i<OBSTACLES.size();i++) OBSTACLES[i]->draw(P, V, spLambertSun);
+        if(wall_creator.is_creating_wall) wall_creator.current_wall->draw(P, V, spLambertSun);
 
         glfwSwapBuffers(window); //Skopiuj bufor tylny do bufora przedniego
 }
@@ -390,8 +406,7 @@ int main(void){
 
         window = glfwCreateWindow(screenwidth, screenheight, "Katakumby", NULL, NULL);  //Utwórz okno 500x500 o tytule "OpenGL" i kontekst OpenGL.
 
-        if (!window) //Jeżeli okna nie udało się utworzyć, to zamknij program
-        {
+        if(!window){
                 fprintf(stderr, "Nie można utworzyć okna.\n");
                 glfwTerminate();
                 exit(EXIT_FAILURE);
@@ -421,6 +436,7 @@ int main(void){
                 glfwPollEvents(); //Wykonaj procedury callback w zalezności od zdarzeń jakie zaszły.
                 printf("pos= %f %f %f\nlookAt %f %f %f\nah=%f,  av=%f\n\n", obserwator.getPosition().x, obserwator.getPosition().y, obserwator.getPosition().z, obserwator.getLookAtPoint().x, obserwator.getLookAtPoint().y, obserwator.getLookAtPoint().z, obserwator.getAngle_horizontal(), obserwator.getAngle_vertical());
 
+                if(gravity_on) obserwator.fall(dt, OBSTACLES);
                 obserwator.move(dt, OBSTACLES);
         }
 
