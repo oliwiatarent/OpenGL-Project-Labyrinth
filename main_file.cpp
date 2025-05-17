@@ -13,9 +13,8 @@
 #include <chrono>
 #include <fstream>
 #include <sstream>
-#include "myCube.h"
 #include "constants.h"
-#include "allmodels.h"
+#include "models/allmodels.h"
 #include "lodepng.h"
 #include "shaders/shaderprogram.h"
 #include "moveable.h"
