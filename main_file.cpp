@@ -43,6 +43,9 @@ std::vector<Wall*> OBSTACLES;
 Wall_creator wall_creator;
 Observer obserwator;
 
+ShaderProgram* sp;
+ShaderProgram* observers_light;
+
 //Procedura obsługi błędów
 void error_callback(int error, const char* description) {
         fputs(description, stderr);
@@ -317,8 +320,6 @@ GLuint readTexture(const char* scianyname) {
         return tex;
 }
 
-ShaderProgram* sp;
-//Procedura inicjująca
 void initOpenGLProgram(GLFWwindow* window) {
         initShaders();
         //************Tutaj umieszczaj kod, który należy wykonać raz, na początku programu************
@@ -337,6 +338,7 @@ void initOpenGLProgram(GLFWwindow* window) {
         TEXTURES.push_back(readTexture("assests/textures/drewno.png"));
         wall_creator.assign_next_texture(TEXTURES);
         sp = new ShaderProgram("shaders/v_test.glsl", NULL, "shaders/f_test.glsl");
+        observers_light = new ShaderProgram("shaders/v_distanced.glsl", NULL, "shaders/f_distanced.glsl");
 }
 
 //Zwolnienie zasobów zajętych przez program
@@ -348,13 +350,13 @@ void freeOpenGLProgram(GLFWwindow* window) {
 
 void prepareMoveables(){
         obserwator.setRadius(0.2);
-        obserwator.setPosition(-14, 3, -6);
+        obserwator.setPosition(-4, 1, 4);
         obserwator.setVelocity_value(5);
 }
 
 void prepareScene() {
         int labyrinthHeight = 10, labirynthWidth = 15;
-        int numberOfFloors = 1;
+        int numberOfFloors = 3;
         float wallLength = 1.0f, wallHeight = 5.0f, wallWidth = 5.0f;
         
         for (int i = 0; i < numberOfFloors; i++) {
@@ -417,7 +419,11 @@ void drawScene(GLFWwindow* window) {
         glm::mat4 V = glm::lookAt(obserwator.getCameraPosition(), obserwator.getLookAtPoint(), glm::vec3(0.0f, 1.0f, 0.0f)); //Wylicz macierz widoku
         glm::mat4 P = glm::perspective(glm::radians(50.0f), aspectRatio, zNear, zFar); //Wylicz macierz rzutowania
 
-        for(unsigned int i=0;i<OBSTACLES.size();i++) OBSTACLES[i]->draw(P, V, spLambertSun);
+        for(unsigned int i=0;i<OBSTACLES.size();i++){
+                glUniform4f(observers_light->u("camera_position"), obserwator.getCameraPosition().x, obserwator.getCameraPosition().y, obserwator.getCameraPosition().z, 0.0);
+                glUniform1f(observers_light->u("light_power"), 3.0);
+                OBSTACLES[i]->draw(P, V, observers_light);
+        }
         if(wall_creator.is_creating_wall) wall_creator.current_wall->draw(P, V, spLambertSun);
 
         glfwSwapBuffers(window); //Skopiuj bufor tylny do bufora przedniego
