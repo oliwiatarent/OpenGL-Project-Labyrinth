@@ -8,7 +8,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <stdlib.h>
 #include <stdio.h>
-#include "shaderprogram.h"
+#include "shaders/shaderprogram.h"
 #include <vector>
 
 class Wall{ // abstrakcyjna klasa do tworzenia graniastosłupów o różnych podstawach, równi pochyłych, itp.
