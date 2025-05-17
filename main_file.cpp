@@ -348,9 +348,20 @@ void prepareScene(){
         mur.setTexture(TEXTURES[0]);
         obstacles_rect.push_back(mur);
 
+        mur = Wall_rect(5, 0, 7, 10, 15, 2);
+        mur.setAngle_horizontal(PI/6);
+        mur.setAngle_vertical(0);
+        mur.setTexture(TEXTURES[0]);
+        obstacles_rect.push_back(mur);
+
+        mur = Wall_rect(-6, 0, -12, 21, 25, 4);
+        mur.setAngle_horizontal(PI/6);
+        mur.setAngle_vertical(0);
+        mur.setTexture(TEXTURES[0]);
+        obstacles_rect.push_back(mur);
+
         Wall_trian murek = Wall_trian(glm::vec3(6.0, 0.0, 6.0), 3, 4, 5, PI/2);
         murek.setAngle_vertical(PI/2);
-        //murek.setAngle_horizontal(PI/2);
         murek.setTexture(TEXTURES[0]);
         obstacles_tr.push_back(murek);
 

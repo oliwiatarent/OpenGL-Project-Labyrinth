@@ -129,9 +129,12 @@ void Wall_rect::wall_initializer(){
     TEX_COORDS = new float[72];
     for(unsigned short i=0;i<72;i++) TEX_COORDS[i] = texCoords[i];
 
-    skaluj(TEX_COORDS, 1, 72, 2, h);
-    skaluj(TEX_COORDS, 0, 48, 2, l);
+    skaluj(TEX_COORDS, 1, 24, 2, h);
+    skaluj(TEX_COORDS, 49, 72, 2, h);
+    skaluj(TEX_COORDS, 0, 24, 2, l);
     skaluj(TEX_COORDS, 48, 72, 2, w);
+    skaluj(TEX_COORDS, 24, 48, 2, l);
+    skaluj(TEX_COORDS, 25, 48, 2, w);
 }
 
 void Wall_rect::skaluj(float tab[], unsigned int start, unsigned int stop, unsigned int step, float mnoznik){
