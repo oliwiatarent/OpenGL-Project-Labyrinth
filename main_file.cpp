@@ -292,7 +292,7 @@ void cursor_position_callback(GLFWwindow* window, double xpos, double ypos){
         }
 }
 
-GLuint readTexture(const char* filename) {
+GLuint readTexture(const char* scianyname) {
         GLuint tex;
         glActiveTexture(GL_TEXTURE0);
 
@@ -301,7 +301,7 @@ GLuint readTexture(const char* filename) {
         unsigned width, height;   //Zmienne do których wczytamy wymiary obrazka
         //Wczytaj obrazek
         //unsigned error = 
-        lodepng::decode(image, width, height, filename);
+        lodepng::decode(image, width, height, scianyname);
 
         //Import do pamięci karty graficznej
         glGenTextures(1, &tex); //Zainicjuj jeden uchwyt
@@ -335,6 +335,7 @@ void initOpenGLProgram(GLFWwindow* window) {
 
         TEXTURES.push_back(readTexture("assests/textures/marble.png"));
         TEXTURES.push_back(readTexture("assests/textures/bricks.png"));
+        TEXTURES.push_back(readTexture("assests/textures/drewno.png"));
         wall_creator.assign_next_texture(TEXTURES);
         sp = new ShaderProgram("v_test.glsl", NULL, "f_test.glsl");
 }
@@ -353,8 +354,8 @@ void prepareMoveables(){
 }
 
 void prepareScene() {
-        int labyrinthHeight = 10, labirynthWidth = 10;
-        int numberOfFloors = 3;
+        int labyrinthHeight = 10, labirynthWidth = 15;
+        int numberOfFloors = 1;
         float wallLength = 1.0f, wallHeight = 5.0f, wallWidth = 5.0f;
         
         for (int i = 0; i < numberOfFloors; i++) {
@@ -364,15 +365,16 @@ void prepareScene() {
                 // labyrinth.print();
                 labyrinth.generateCoordinates(i, wallLength, wallHeight, wallWidth);
 
-                ifstream file("input/labyrinth_" + to_string(i) + ".txt");
+                ifstream sciany("input/labyrinth_" + to_string(i) + ".txt");
+                ifstream podlogi("input/floors_" + to_string(i) + ".txt");
                 string line;
 
-                while (getline(file, line)) {
-                        istringstream iss(line);
+                while (getline(sciany, line)) {
+                        istringstream ss(line);
                         float xl, yd, zb, dlugosc, wysokosc, szerokosc;
                         int horizontal;
 
-                        if (iss >> xl >> yd >> zb >> dlugosc >> wysokosc >> szerokosc >> horizontal) {
+                        if (ss >> xl >> yd >> zb >> dlugosc >> wysokosc >> szerokosc >> horizontal) {
                                 printf("xl = %lf, yd = %lf, zb = %lf, d = %lf, w = %lf, s = %lf, h = %d\n", xl, yd, zb, dlugosc, wysokosc, szerokosc, horizontal);
 
                                 Wall_rect mur;
@@ -384,7 +386,24 @@ void prepareScene() {
                         }
                 }
 
-                file.close();
+                while (getline(podlogi, line)) {
+                        istringstream ps(line);
+                        float xl, yd, zb, dlugosc, wysokosc, szerokosc;
+
+                        if (ps >> xl >> yd >> zb >> dlugosc >> wysokosc >> szerokosc) {
+                                printf("xl = %lf, yd = %lf, zb = %lf, d = %lf, w = %lf, s = %lf\n", xl, yd, zb, dlugosc, wysokosc, szerokosc);
+
+                                Wall_rect podloga;
+                                podloga = Wall_rect(xl, yd, zb, dlugosc, wysokosc, szerokosc);
+                                podloga.setAngle_vertical(0);
+                                podloga.setAngle_horizontal(0);
+                                podloga.setTexture(TEXTURES[1]);
+                                obstacles_rect.push_back(podloga);
+                        }
+                }
+
+                sciany.close();
+                podlogi.close();
         }
                 
         for(unsigned int i=0;i<obstacles_rect.size();i++) OBSTACLES.push_back(&obstacles_rect[i]);
