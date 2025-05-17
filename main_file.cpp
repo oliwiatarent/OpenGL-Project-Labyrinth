@@ -46,6 +46,13 @@ Observer obserwator;
 ShaderProgram* sp;
 ShaderProgram* observers_light;
 
+float clamp(float value, float min, float max){
+        float result = value;
+        if(result > max) result = max;
+        else if(result < min) result = min;
+        return result;
+}
+
 //Procedura obsługi błędów
 void error_callback(int error, const char* description) {
         fputs(description, stderr);
@@ -334,6 +341,7 @@ void initOpenGLProgram(GLFWwindow* window) {
         glfwSetCursorPos(window, screenwidth/2, screenheight/2);
 
         TEXTURES.push_back(readTexture("assests/textures/marble.png"));
+                TEXTURES.push_back(readTexture("assests/textures/dirt.png"));
         TEXTURES.push_back(readTexture("assests/textures/bricks.png"));
         TEXTURES.push_back(readTexture("assests/textures/drewno.png"));
         wall_creator.assign_next_texture(TEXTURES);
@@ -376,7 +384,7 @@ void prepareScene() {
                         int horizontal;
 
                         if (ss >> xl >> yd >> zb >> dlugosc >> wysokosc >> szerokosc >> horizontal) {
-                                printf("xl = %lf, yd = %lf, zb = %lf, d = %lf, w = %lf, s = %lf, h = %d\n", xl, yd, zb, dlugosc, wysokosc, szerokosc, horizontal);
+                                //printf("xl = %lf, yd = %lf, zb = %lf, d = %lf, w = %lf, s = %lf, h = %d\n", xl, yd, zb, dlugosc, wysokosc, szerokosc, horizontal);
 
                                 Wall_rect mur;
                                 mur = Wall_rect(xl, yd, zb, dlugosc, wysokosc, szerokosc);
@@ -394,12 +402,16 @@ void prepareScene() {
                         if (ps >> xl >> yd >> zb >> dlugosc >> wysokosc >> szerokosc) {
                                 printf("xl = %lf, yd = %lf, zb = %lf, d = %lf, w = %lf, s = %lf\n", xl, yd, zb, dlugosc, wysokosc, szerokosc);
 
-                                Wall_rect podloga;
-                                podloga = Wall_rect(xl, yd, zb, dlugosc, wysokosc, szerokosc);
-                                podloga.setAngle_vertical(0);
-                                podloga.setAngle_horizontal(0);
-                                podloga.setTexture(TEXTURES[1]);
-                                obstacles_rect.push_back(podloga);
+                                float step = 5.0;
+                                for(short iw=0;iw<1+szerokosc/step;iw++) for(short il=0;il<1+dlugosc/step;il++){
+                                        //printf("iw=%hd,  il=%hd\n", iw, il);
+                                        Wall_rect podloga;
+                                        podloga = Wall_rect(xl+step*il, yd, zb+step*iw, clamp(dlugosc-step*il, 0.0, 5.0), wysokosc, clamp(szerokosc-step*iw, 0.0, 5.0));
+                                        podloga.setAngle_vertical(0);
+                                        podloga.setAngle_horizontal(0);
+                                        podloga.setTexture(TEXTURES[1]);
+                                        obstacles_rect.push_back(podloga);
+                                }
                         }
                 }
 
@@ -471,7 +483,7 @@ int main(void){
 
                 drawScene(window); //Wykonaj procedurę rysującą
                 glfwPollEvents(); //Wykonaj procedury callback w zalezności od zdarzeń jakie zaszły.
-                printf("pos= %f %f %f\nlookAt %f %f %f\nah=%f,  av=%f\n\n", obserwator.getPosition().x, obserwator.getPosition().y, obserwator.getPosition().z, obserwator.getLookAtPoint().x, obserwator.getLookAtPoint().y, obserwator.getLookAtPoint().z, obserwator.getAngle_horizontal(), obserwator.getAngle_vertical());
+                //printf("pos= %f %f %f\nlookAt %f %f %f\nah=%f,  av=%f\n\n", obserwator.getPosition().x, obserwator.getPosition().y, obserwator.getPosition().z, obserwator.getLookAtPoint().x, obserwator.getLookAtPoint().y, obserwator.getLookAtPoint().z, obserwator.getAngle_horizontal(), obserwator.getAngle_vertical());
 
                 if(gravity_on) obserwator.fall(dt, OBSTACLES);
                 obserwator.move(dt, OBSTACLES);
