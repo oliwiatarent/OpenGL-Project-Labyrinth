@@ -25,11 +25,16 @@
 
 using namespace std;
 
+float zNear = 0.05; // bliższa odległość odcinania
+float zFar = 100.0; // dalsza odległość odcinania
+float mouse_sensitivity = 0.001; // czułość myszy
+
+
 unsigned short screenwidth = 500;
 unsigned short screenheight = 500;
 float aspectRatio = 1.0;
 bool cursor_centred = true;
-bool gravity_on = true;
+bool gravity_on = false;
 
 std::vector<GLuint> TEXTURES;
 std::vector<Wall_rect> obstacles_rect;
@@ -262,6 +267,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                         obserwator.setVelocity(glm::vec3(0.0, 0.0, 0.0));
                 }
                 else if(key==KEY_MOVE_JUMP)  obserwator.jump();
+                else if(key==KEY_INC_MOUSE_SENSITIVITY) mouse_sensitivity *= 2;
+                else if(key==KEY_DEC_MOUSE_SENSITIVITY) mouse_sensitivity *= 0.5;
 
 		std::thread t(key_repetition, window, key, scancode, action, mod);
 		t.detach(); 
@@ -279,8 +286,8 @@ void cursor_position_callback(GLFWwindow* window, double xpos, double ypos){
         double dy = ypos - screenheight/2;
 
         if(cursor_centred){
-                obserwator.change_angle_horizontal(dx * 0.00001);
-                obserwator.change_angle_vertical(-dy * 0.00001);
+                obserwator.change_angle_horizontal(dx * mouse_sensitivity);
+                obserwator.change_angle_vertical(-dy * mouse_sensitivity);
                 glfwSetCursorPos(window, screenwidth/2, screenheight/2);
         }
 }
@@ -347,7 +354,7 @@ void prepareMoveables(){
 
 void prepareScene() {
         int labyrinthHeight = 10, labirynthWidth = 10;
-        int numberOfFloors = 1;
+        int numberOfFloors = 3;
         float wallLength = 1.0f, wallHeight = 5.0f, wallWidth = 5.0f;
         
         for (int i = 0; i < numberOfFloors; i++) {
@@ -366,10 +373,12 @@ void prepareScene() {
                         int horizontal;
 
                         if (iss >> xl >> yd >> zb >> dlugosc >> wysokosc >> szerokosc >> horizontal) {
-                                // printf("xl = %lf, yd = %lf, zb = %lf, d = %lf, w = %lf, s = %lf, h = %d\n", xl, yd, zb, dlugosc, wysokosc, szerokosc, horizontal);
+                                printf("xl = %lf, yd = %lf, zb = %lf, d = %lf, w = %lf, s = %lf, h = %d\n", xl, yd, zb, dlugosc, wysokosc, szerokosc, horizontal);
 
                                 Wall_rect mur;
                                 mur = Wall_rect(xl, yd, zb, dlugosc, wysokosc, szerokosc);
+                                mur.setAngle_vertical(0);
+                                mur.setTexture(TEXTURES[1]);
                                 if (horizontal) mur.setAngle_horizontal(PI/2); else mur.setAngle_horizontal(0);
                                 obstacles_rect.push_back(mur);
                         }
@@ -377,6 +386,10 @@ void prepareScene() {
 
                 file.close();
         }
+                
+        for(unsigned int i=0;i<obstacles_rect.size();i++) OBSTACLES.push_back(&obstacles_rect[i]);
+        for(unsigned int i=0;i<obstacles_tr.size();i++) OBSTACLES.push_back(&obstacles_tr[i]);
+        for(unsigned int i=0;i<ramps.size();i++) OBSTACLES.push_back(&ramps[i]);
 }
 
 void drawScene(GLFWwindow* window) {
@@ -384,7 +397,7 @@ void drawScene(GLFWwindow* window) {
 
         glm::mat4 M = glm::mat4(1.0f); //Zainicjuj macierz modelu macierzą jednostkową
         glm::mat4 V = glm::lookAt(obserwator.getCameraPosition(), obserwator.getLookAtPoint(), glm::vec3(0.0f, 1.0f, 0.0f)); //Wylicz macierz widoku
-        glm::mat4 P = glm::perspective(glm::radians(50.0f), aspectRatio, 0.01f, 50.0f); //Wylicz macierz rzutowania
+        glm::mat4 P = glm::perspective(glm::radians(50.0f), aspectRatio, zNear, zFar); //Wylicz macierz rzutowania
 
         for(unsigned int i=0;i<OBSTACLES.size();i++) OBSTACLES[i]->draw(P, V, spLambertSun);
         if(wall_creator.is_creating_wall) wall_creator.current_wall->draw(P, V, spLambertSun);

@@ -231,7 +231,7 @@ bool Moveable::move(float T, std::vector<Wall*>& obstacles){
     if(new_position_valid) position = new_position_down;
     else{
         move_along_obstacle(T, obstacles);
-        velocity.y = 0.0;
+        //velocity.y = 0.0;
     } 
     return new_position_valid;
 }
