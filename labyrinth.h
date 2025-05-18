@@ -7,6 +7,8 @@
 
 using namespace std;
 
+extern int numberOfFloors;
+
 struct Punkt {
 public:
     int x, y, k;

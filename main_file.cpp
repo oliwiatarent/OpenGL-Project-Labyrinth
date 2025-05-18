@@ -353,9 +353,9 @@ void prepareMoveables(){
         obserwator.setVelocity_value(5);
 }
 
+int numberOfFloors = 2;
 void prepareScene() {
-        int labyrinthHeight = 10, labirynthWidth = 15;
-        int numberOfFloors = 1;
+        int labyrinthHeight = 10, labirynthWidth = 10;
         float wallLength = 1.0f, wallHeight = 5.0f, wallWidth = 5.0f;
         
         for (int i = 0; i < numberOfFloors; i++) {
@@ -367,14 +367,15 @@ void prepareScene() {
 
                 ifstream sciany("input/labyrinth_" + to_string(i) + ".txt");
                 ifstream podlogi("input/floors_" + to_string(i) + ".txt");
+                ifstream rampy("input/rampy_" + to_string(i) + ".txt");
                 string line;
 
                 while (getline(sciany, line)) {
-                        istringstream ss(line);
+                        istringstream iss(line);
                         float xl, yd, zb, dlugosc, wysokosc, szerokosc;
                         int horizontal;
 
-                        if (ss >> xl >> yd >> zb >> dlugosc >> wysokosc >> szerokosc >> horizontal) {
+                        if (iss >> xl >> yd >> zb >> dlugosc >> wysokosc >> szerokosc >> horizontal) {
                                 printf("xl = %lf, yd = %lf, zb = %lf, d = %lf, w = %lf, s = %lf, h = %d\n", xl, yd, zb, dlugosc, wysokosc, szerokosc, horizontal);
 
                                 Wall_rect mur;
@@ -387,10 +388,10 @@ void prepareScene() {
                 }
 
                 while (getline(podlogi, line)) {
-                        istringstream ps(line);
+                        istringstream iss(line);
                         float xl, yd, zb, dlugosc, wysokosc, szerokosc;
 
-                        if (ps >> xl >> yd >> zb >> dlugosc >> wysokosc >> szerokosc) {
+                        if (iss >> xl >> yd >> zb >> dlugosc >> wysokosc >> szerokosc) {
                                 printf("xl = %lf, yd = %lf, zb = %lf, d = %lf, w = %lf, s = %lf\n", xl, yd, zb, dlugosc, wysokosc, szerokosc);
 
                                 Wall_rect podloga;
@@ -402,10 +403,25 @@ void prepareScene() {
                         }
                 }
 
+                while (getline(rampy, line)) {
+                        istringstream iss(line);
+                        float xl, yd, zb, dlugosc, wysokosc, szerokosc;
+
+                        if (iss >> xl >> yd >> zb >> dlugosc >> wysokosc >> szerokosc) {
+                                printf("xl = %lf, yd = %lf, zb = %lf, d = %lf, w = %lf, s = %lf\n", xl, yd, zb, dlugosc, wysokosc, szerokosc);
+
+                                Ramp rampa = Ramp(glm::vec3(xl, yd, zb), dlugosc, wysokosc, szerokosc);
+                                rampa.setTexture(TEXTURES[1]);
+                                ramps.push_back(rampa);
+                        }
+                }
+
                 sciany.close();
                 podlogi.close();
+                rampy.close();
+
         }
-                
+
         for(unsigned int i=0;i<obstacles_rect.size();i++) OBSTACLES.push_back(&obstacles_rect[i]);
         for(unsigned int i=0;i<obstacles_tr.size();i++) OBSTACLES.push_back(&obstacles_tr[i]);
         for(unsigned int i=0;i<ramps.size();i++) OBSTACLES.push_back(&ramps[i]);
