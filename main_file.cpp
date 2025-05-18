@@ -341,7 +341,7 @@ void initOpenGLProgram(GLFWwindow* window) {
         glfwSetCursorPos(window, screenwidth/2, screenheight/2);
 
         TEXTURES.push_back(readTexture("assests/textures/marble.png"));
-                TEXTURES.push_back(readTexture("assests/textures/dirt.png"));
+                TEXTURES.push_back(readTexture("assests/textures/rock.png"));
         TEXTURES.push_back(readTexture("assests/textures/bricks.png"));
         TEXTURES.push_back(readTexture("assests/textures/drewno.png"));
         wall_creator.assign_next_texture(TEXTURES);
@@ -424,16 +424,18 @@ void prepareScene() {
         for(unsigned int i=0;i<ramps.size();i++) OBSTACLES.push_back(&ramps[i]);
 }
 
-void drawScene(GLFWwindow* window) {
+void drawScene(GLFWwindow* window, float dt){
+        static double time = 0;
+        time += dt;
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //Wyczyść bufor koloru i bufor głębokości
 
         glm::mat4 M = glm::mat4(1.0f); //Zainicjuj macierz modelu macierzą jednostkową
         glm::mat4 V = glm::lookAt(obserwator.getCameraPosition(), obserwator.getLookAtPoint(), glm::vec3(0.0f, 1.0f, 0.0f)); //Wylicz macierz widoku
         glm::mat4 P = glm::perspective(glm::radians(50.0f), aspectRatio, zNear, zFar); //Wylicz macierz rzutowania
 
+        glUniform4f(observers_light->u("camera_position"), obserwator.getCameraPosition().x, obserwator.getCameraPosition().y, obserwator.getCameraPosition().z, 0.0);
+        glUniform1f(observers_light->u("light_power"), (float)(5.0+1.0*sin(time)));
         for(unsigned int i=0;i<OBSTACLES.size();i++){
-                glUniform4f(observers_light->u("camera_position"), obserwator.getCameraPosition().x, obserwator.getCameraPosition().y, obserwator.getCameraPosition().z, 0.0);
-                glUniform1f(observers_light->u("light_power"), 3.0);
                 OBSTACLES[i]->draw(P, V, observers_light);
         }
         if(wall_creator.is_creating_wall) wall_creator.current_wall->draw(P, V, spLambertSun);
@@ -481,7 +483,7 @@ int main(void){
                 dt = glfwGetTime();
                 glfwSetTime(0); //Wyzeruj licznik czasu
 
-                drawScene(window); //Wykonaj procedurę rysującą
+                drawScene(window, dt); //Wykonaj procedurę rysującą
                 glfwPollEvents(); //Wykonaj procedury callback w zalezności od zdarzeń jakie zaszły.
                 //printf("pos= %f %f %f\nlookAt %f %f %f\nah=%f,  av=%f\n\n", obserwator.getPosition().x, obserwator.getPosition().y, obserwator.getPosition().z, obserwator.getLookAtPoint().x, obserwator.getLookAtPoint().y, obserwator.getLookAtPoint().z, obserwator.getAngle_horizontal(), obserwator.getAngle_vertical());
 

@@ -17,7 +17,7 @@ out vec2 i_tc;
 
 void main(void) {
     d = distance(camera_position, M*vertex);
-    d = clamp(light_power/d, 0.05, 1.0);
+    d = clamp(pow(light_power, 1.5)/pow(d, 1.5), 0.01, 1.0);
 
     i_tc=texCoord;
     gl_Position=P*V*M*vertex;
