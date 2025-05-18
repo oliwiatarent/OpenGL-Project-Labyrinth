@@ -1,24 +1,4 @@
-﻿/*
-Niniejszy program jest wolnym oprogramowaniem; możesz go
-rozprowadzać dalej i / lub modyfikować na warunkach Powszechnej
-Licencji Publicznej GNU, wydanej przez Fundację Wolnego
-Oprogramowania - według wersji 2 tej Licencji lub(według twojego
-wyboru) którejś z późniejszych wersji.
-
-Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on
-użyteczny - jednak BEZ JAKIEJKOLWIEK GWARANCJI, nawet domyślnej
-gwarancji PRZYDATNOŚCI HANDLOWEJ albo PRZYDATNOŚCI DO OKREŚLONYCH
-ZASTOSOWAŃ.W celu uzyskania bliższych informacji sięgnij do
-Powszechnej Licencji Publicznej GNU.
-
-Z pewnością wraz z niniejszym programem otrzymałeś też egzemplarz
-Powszechnej Licencji Publicznej GNU(GNU General Public License);
-jeśli nie - napisz do Free Software Foundation, Inc., 59 Temple
-Place, Fifth Floor, Boston, MA  02110 - 1301  USA
-*/
-
-#include "shaderprogram.h"
-
+﻿#include "shaderprogram.h"
 
 ShaderProgram *spLambert;
 ShaderProgram *spConstant;
@@ -29,12 +9,12 @@ ShaderProgram* spLambertSun;
 
 
 void initShaders() {
-	spLambert = new ShaderProgram("v_lambert.glsl", NULL, "f_lambert.glsl");
-	spConstant = new ShaderProgram("v_constant.glsl", NULL, "f_constant.glsl");
-	spTextured = new ShaderProgram("v_textured.glsl", NULL, "f_textured.glsl");
-	spColored = new ShaderProgram("v_colored.glsl", NULL, "f_colored.glsl");
-	spLambertTextured = new ShaderProgram("v_lamberttextured.glsl", NULL, "f_lamberttextured.glsl");
-	spLambertSun = new ShaderProgram("v_test.glsl", NULL, "f_test.glsl");
+	spLambert = new ShaderProgram("shaders/v_lambert.glsl", NULL, "shaders/f_lambert.glsl");
+	spConstant = new ShaderProgram("shaders/v_constant.glsl", NULL, "shaders/f_constant.glsl");
+	spTextured = new ShaderProgram("shaders/v_textured.glsl", NULL, "shaders/f_textured.glsl");
+	spColored = new ShaderProgram("shaders/v_colored.glsl", NULL, "shaders/f_colored.glsl");
+	spLambertTextured = new ShaderProgram("shaders/v_lamberttextured.glsl", NULL, "shaders/f_lamberttextured.glsl");
+	spLambertSun = new ShaderProgram("shaders/v_test.glsl", NULL, "shaders/f_test.glsl");
 }
 
 void freeShaders() {

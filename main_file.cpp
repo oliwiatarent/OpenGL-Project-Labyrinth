@@ -13,11 +13,10 @@
 #include <chrono>
 #include <fstream>
 #include <sstream>
-#include "myCube.h"
 #include "constants.h"
-#include "allmodels.h"
+#include "models/allmodels.h"
 #include "lodepng.h"
-#include "shaderprogram.h"
+#include "shaders/shaderprogram.h"
 #include "moveable.h"
 #include "wall.h"
 #include "key-funcs.h"
@@ -337,7 +336,7 @@ void initOpenGLProgram(GLFWwindow* window) {
         TEXTURES.push_back(readTexture("assests/textures/bricks.png"));
         TEXTURES.push_back(readTexture("assests/textures/drewno.png"));
         wall_creator.assign_next_texture(TEXTURES);
-        sp = new ShaderProgram("v_test.glsl", NULL, "f_test.glsl");
+        sp = new ShaderProgram("shaders/v_test.glsl", NULL, "shaders/f_test.glsl");
 }
 
 //Zwolnienie zasobów zajętych przez program
