@@ -13,6 +13,7 @@
 #include <chrono>
 #include <fstream>
 #include <sstream>
+#include <algorithm>
 #include "constants.h"
 #include "models/allmodels.h"
 #include "lodepng.h"
@@ -28,17 +29,21 @@
 
 using namespace std;
 
-float zNear = 0.05; // bliższa odległość odcinania
-float zFar = 100.0; // dalsza odległość odcinania
+float zNear = 0.01; // bliższa odległość odcinania
+float zFar = 70.0; // dalsza odległość odcinania
 float mouse_sensitivity = 0.001; // czułość myszy
 
-
+char maxActive_lights = 10; // NIE PRZEKRACZAĆ 10, ZMIENIĆ TEŻ W VERTEX SHADERZE ROZMIAR torches[] !!
+char maxTorchesPerFloor = 10;
 unsigned short screenwidth = 500;
 unsigned short screenheight = 500;
 float aspectRatio = 1.0;
 bool cursor_centred = true;
 bool gravity_on = false;
 
+int numberOfFloors = 3;
+float wallHeight = 9.0f;
+std::vector<std::vector<glm::vec3>> torches;
 std::vector<GLuint> TEXTURES;
 std::vector<Wall_rect> obstacles_rect;
 std::vector<Wall_trian> obstacles_tr;
@@ -50,18 +55,24 @@ Observer obserwator;
 ShaderProgram* sp;
 ShaderProgram* observers_light;
 
+bool porownaj_odleglosci(glm::vec3 p1, glm::vec3 p2){
+        glm::vec3 pozycjaObs = obserwator.getPosition();
+        return pow(pozycjaObs.x - p1.x, 2) + pow(pozycjaObs.z - p1.z, 2) < pow(pozycjaObs.x - p2.x, 2) + pow(pozycjaObs.z - p2.z, 2);
+}
 float clamp(float value, float min, float max){
         float result = value;
         if(result > max) result = max;
         else if(result < min) result = min;
         return result;
 }
+float randFloat(){
+        float result = rand() % 1000;
+        return (float) result / 1000;
+}
 
-//Procedura obsługi błędów
 void error_callback(int error, const char* description) {
         fputs(description, stderr);
 }
-
 void windowResizeCallback(GLFWwindow* window,int width,int height) {
         if (height==0) return;
         aspectRatio=(float)width/(float)height;
@@ -69,7 +80,6 @@ void windowResizeCallback(GLFWwindow* window,int width,int height) {
         screenwidth = width;
         screenheight = height;
 }
-
 void key_repetition_wall_creation(GLFWwindow* window, int key, int scancode, int action, int mod){
         float dx = 0.1;
         float dg = 0.05;
@@ -136,7 +146,6 @@ void key_repetition_wall_creation(GLFWwindow* window, int key, int scancode, int
 		std::this_thread::sleep_for(std::chrono::milliseconds(50));
 	}
 }
-
 void key_callback_wall_creation(GLFWwindow* window, int key, int scancode, int action, int mod){
         float dx = 0.1;
         float dg = 0.05;
@@ -215,7 +224,6 @@ void key_callback_wall_creation(GLFWwindow* window, int key, int scancode, int a
         std::thread t(key_repetition_wall_creation, window, key, scancode, action, mod);
         t.detach(); 
 }
-
 void key_repetition(GLFWwindow* window, int key, int scancode, int action, int mod){
 	std::this_thread::sleep_for(std::chrono::milliseconds(50));
 	while(GLFW_PRESS==glfwGetKey(window, key)){
@@ -248,7 +256,6 @@ void key_repetition(GLFWwindow* window, int key, int scancode, int action, int m
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}
 }
-
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod){
         if(action == GLFW_PRESS) {
                 if(key == KEY_MOVE_LEFT){
@@ -293,7 +300,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 }
         }
 }
-
 void cursor_position_callback(GLFWwindow* window, double xpos, double ypos){
         double dx = xpos - screenwidth/2;
         double dy = ypos - screenheight/2;
@@ -304,7 +310,6 @@ void cursor_position_callback(GLFWwindow* window, double xpos, double ypos){
                 glfwSetCursorPos(window, screenwidth/2, screenheight/2);
         }
 }
-
 GLuint readTexture(const char* scianyname) {
         GLuint tex;
         glActiveTexture(GL_TEXTURE0);
@@ -330,7 +335,6 @@ GLuint readTexture(const char* scianyname) {
 
         return tex;
 }
-
 void initOpenGLProgram(GLFWwindow* window) {
         initShaders();
         //************Tutaj umieszczaj kod, który należy wykonać raz, na początku programu************
@@ -344,32 +348,27 @@ void initOpenGLProgram(GLFWwindow* window) {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         glfwSetCursorPos(window, screenwidth/2, screenheight/2);
 
-        TEXTURES.push_back(readTexture("assests/textures/marble.png"));
-                //TEXTURES.push_back(readTexture("assests/textures/rock.png"));
-        TEXTURES.push_back(readTexture("assests/textures/bricks.png"));
         TEXTURES.push_back(readTexture("assests/textures/drewno.png"));
+        //TEXTURES.push_back(readTexture("assests/textures/rock.png"));
+        TEXTURES.push_back(readTexture("assests/textures/marble.png"));
         wall_creator.assign_next_texture(TEXTURES);
         sp = new ShaderProgram("shaders/v_test.glsl", NULL, "shaders/f_test.glsl");
         observers_light = new ShaderProgram("shaders/v_distanced.glsl", NULL, "shaders/f_distanced.glsl");
 }
-
-//Zwolnienie zasobów zajętych przez program
 void freeOpenGLProgram(GLFWwindow* window) {
         freeShaders();
         //************Tutaj umieszczaj kod, który należy wykonać po zakończeniu pętli głównej************
         for(unsigned int i=0;i<TEXTURES.size();i++) glDeleteTextures(1, &TEXTURES[i]);
 }
-
 void prepareMoveables(){
         obserwator.setRadius(0.02);
-        obserwator.setPosition(-4, 1, 4);
+        obserwator.setPosition(-14, 1, 4);
         obserwator.setVelocity_value(10);
 }
-
-int numberOfFloors = 3;
-void prepareScene() {
+void prepareScene(){
+        torches.resize(numberOfFloors);
         int labyrinthHeight = 10, labirynthWidth = 10;
-        float wallLength = 1.0f, wallHeight = 9.0f, wallWidth = 7.0f;
+        float wallLength = 1.0f, wallWidth = 7.0f;
         
         for (int i = 0; i < numberOfFloors; i++) {
                 srand(std::chrono::high_resolution_clock::now().time_since_epoch().count() + i * 1337);
@@ -387,15 +386,23 @@ void prepareScene() {
                         istringstream iss(line);
                         float xl, yd, zb, dlugosc, wysokosc, szerokosc;
                         int horizontal;
+                        float torch_radius = 1.0;
 
                         if (iss >> xl >> yd >> zb >> dlugosc >> wysokosc >> szerokosc >> horizontal) {
-                                printf("xl = %lf, yd = %lf, zb = %lf, d = %lf, w = %lf, s = %lf, h = %d\n", xl, yd, zb, dlugosc, wysokosc, szerokosc, horizontal);
+                                //printf("xl = %lf, yd = %lf, zb = %lf, d = %lf, w = %lf, s = %lf, h = %d\n", xl, yd, zb, dlugosc, wysokosc, szerokosc, horizontal);
 
                                 Wall_rect mur;
-                                mur = Wall_rect(xl, yd, zb, dlugosc, wysokosc, szerokosc);
+                                mur = Wall_rect(xl-(float)(rand()%10)/1000, yd, zb-(float)(rand()%10)/1000, dlugosc-(float)(rand()%10)/1000, wysokosc-(float)(rand()%10)/1000, szerokosc-(float)(rand()%10)/1000);
                                 mur.setAngle_vertical(0);
                                 mur.setTexture(TEXTURES[1]);
                                 if (horizontal) mur.setAngle_horizontal(PI/2); else mur.setAngle_horizontal(0);
+
+                                if(rand()%12==0 && torches[i].size() < maxTorchesPerFloor){
+                                        if(!horizontal){
+                                                torches[i].push_back(glm::vec3(xl+dlugosc+torch_radius, yd+wysokosc*0.4, zb+(szerokosc+dlugosc)*0.5));
+                                                torches[i].push_back(glm::vec3(xl-torch_radius, yd+wysokosc*0.4, zb+(szerokosc+dlugosc)*0.5));
+                                        } 
+                                }
                                 obstacles_rect.push_back(mur);
                         }
                 }
@@ -441,9 +448,6 @@ void prepareScene() {
 
         }
 
-        Ramp ranp(glm::vec3(-14, 0.0, -14), 5, 5, 5);
-        ramps.push_back(ranp);
-
         for(unsigned int i=0;i<obstacles_rect.size();i++) OBSTACLES.push_back(&obstacles_rect[i]);
         for(unsigned int i=0;i<obstacles_tr.size();i++) OBSTACLES.push_back(&obstacles_tr[i]);
         for(unsigned int i=0;i<ramps.size();i++) OBSTACLES.push_back(&ramps[i]);
@@ -453,18 +457,34 @@ void drawScene(GLFWwindow* window, float dt){
         static double time = 0;
         time += dt;
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //Wyczyść bufor koloru i bufor głębokości
+        short current_floor = obserwator.getPosition().y / wallHeight;
+        sort(torches[current_floor].begin(), torches[current_floor].end(), porownaj_odleglosci);
 
         glm::mat4 M = glm::mat4(1.0f); //Zainicjuj macierz modelu macierzą jednostkową
         glm::mat4 V = glm::lookAt(obserwator.getCameraPosition(), obserwator.getLookAtPoint(), glm::vec3(0.0f, 1.0f, 0.0f)); //Wylicz macierz widoku
         glm::mat4 P = glm::perspective(glm::radians(50.0f), aspectRatio, zNear, zFar); //Wylicz macierz rzutowania
 
+        for(unsigned int i=0;i<torches[current_floor].size();i++){
+                M = glm::mat4(1.0f);
+                M = glm::translate(M, torches[current_floor][i]);
+                glUniform4f(spLambert->u("color"), 0.0, 1.0, 0.0, 1);
+                //Załadowanie macierzy modelu do programu cieniującego
+                glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(M));
+                M = glm::translate(M, glm::vec3(1.0f, 0.0f, 0.0f));
+                Models::teapot.drawSolid(); //Narysowanie obiektu
+        }
+
         glUniform4f(observers_light->u("camera_position"), obserwator.getCameraPosition().x, obserwator.getCameraPosition().y, obserwator.getCameraPosition().z, 0.0);
-        glUniform1f(observers_light->u("light_power"), (float)(5.0+1.0*sin(time)));
+        for(unsigned short i=0;i<maxActive_lights;i++){
+                char var_name[] = "torches[X]";
+                var_name[8] = 48 + i;
+                glUniform4f(observers_light->u(var_name), torches[current_floor][i].x, torches[current_floor][i].y, torches[current_floor][i].z, 0.0);
+        }
+        glUniform1f(observers_light->u("light_power"), (float)(4.5+1.0*sin(time/2)));
         for(unsigned int i=0;i<OBSTACLES.size();i++){
                 OBSTACLES[i]->draw(P, V, observers_light);
         }
         if(wall_creator.is_creating_wall) wall_creator.current_wall->draw(P, V, spLambertSun);
-
         glfwSwapBuffers(window); //Skopiuj bufor tylny do bufora przedniego
 }
 
@@ -510,7 +530,7 @@ int main(void){
 
                 drawScene(window, dt); //Wykonaj procedurę rysującą
                 glfwPollEvents(); //Wykonaj procedury callback w zalezności od zdarzeń jakie zaszły.
-                if(cursor_centred) printf("pos= %f %f %f\n", obserwator.getPosition().x, obserwator.getPosition().y, obserwator.getPosition().z);
+                //if(cursor_centred) printf("pos= %f %f %f\n", obserwator.getPosition().x, obserwator.getPosition().y, obserwator.getPosition().z);
 
                 if(gravity_on) obserwator.fall(dt, OBSTACLES);
                 obserwator.move(dt, OBSTACLES);
