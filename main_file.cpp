@@ -352,10 +352,10 @@ void prepareMoveables(){
         obserwator.setVelocity_value(5);
 }
 
-int numberOfFloors = 2;
+int numberOfFloors = 3;
 void prepareScene() {
         int labyrinthHeight = 10, labirynthWidth = 10;
-        float wallLength = 1.0f, wallHeight = 5.0f, wallWidth = 5.0f;
+        float wallLength = 1.0f, wallHeight = 9.0f, wallWidth = 7.0f;
         
         for (int i = 0; i < numberOfFloors; i++) {
                 srand(std::chrono::high_resolution_clock::now().time_since_epoch().count() + i * 1337);
@@ -405,11 +405,13 @@ void prepareScene() {
                 while (getline(rampy, line)) {
                         istringstream iss(line);
                         float xl, yd, zb, dlugosc, wysokosc, szerokosc;
+                        int klatka;
 
-                        if (iss >> xl >> yd >> zb >> dlugosc >> wysokosc >> szerokosc) {
+                        if (iss >> xl >> yd >> zb >> dlugosc >> wysokosc >> szerokosc >> klatka) {
                                 printf("xl = %lf, yd = %lf, zb = %lf, d = %lf, w = %lf, s = %lf\n", xl, yd, zb, dlugosc, wysokosc, szerokosc);
 
                                 Ramp rampa = Ramp(glm::vec3(xl, yd, zb), dlugosc, wysokosc, szerokosc);
+                                if (!klatka) rampa.setAngle_horizontal(3*PI/2); else rampa.setAngle_horizontal(PI/2);
                                 rampa.setTexture(TEXTURES[1]);
                                 ramps.push_back(rampa);
                         }
