@@ -1,6 +1,6 @@
 #include "moveable.h"
 
-#define maxClimbAngle 3.14/3
+#define maxClimbAngle 3.14/2.5
 #define std_grav 9.81
 #define climbing_samples 5
 
@@ -225,7 +225,10 @@ bool Moveable::move(float T, std::vector<Wall*>& obstacles){
         }
 
         in_air = false;
-        break;
+        if(!new_position_valid){
+             break;
+        }
+        else continue;
     }
 
     if(new_position_valid) position = new_position_down;

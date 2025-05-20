@@ -21,6 +21,10 @@
 #include "wall.h"
 #include "key-funcs.h"
 #include "labyrinth.h"
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+#include "externalmodel.h"
 
 using namespace std;
 
@@ -341,7 +345,7 @@ void initOpenGLProgram(GLFWwindow* window) {
         glfwSetCursorPos(window, screenwidth/2, screenheight/2);
 
         TEXTURES.push_back(readTexture("assests/textures/marble.png"));
-                TEXTURES.push_back(readTexture("assests/textures/rock.png"));
+                //TEXTURES.push_back(readTexture("assests/textures/rock.png"));
         TEXTURES.push_back(readTexture("assests/textures/bricks.png"));
         TEXTURES.push_back(readTexture("assests/textures/drewno.png"));
         wall_creator.assign_next_texture(TEXTURES);
@@ -357,12 +361,12 @@ void freeOpenGLProgram(GLFWwindow* window) {
 }
 
 void prepareMoveables(){
-        obserwator.setRadius(0.2);
+        obserwator.setRadius(0.02);
         obserwator.setPosition(-4, 1, 4);
-        obserwator.setVelocity_value(5);
+        obserwator.setVelocity_value(10);
 }
 
-int numberOfFloors = 2;
+int numberOfFloors = 3;
 void prepareScene() {
         int labyrinthHeight = 10, labirynthWidth = 10;
         float wallLength = 1.0f, wallHeight = 5.0f, wallWidth = 5.0f;
@@ -435,6 +439,9 @@ void prepareScene() {
 
         }
 
+        Ramp ranp(glm::vec3(-14, 0.0, -14), 5, 5, 5);
+        ramps.push_back(ranp);
+
         for(unsigned int i=0;i<obstacles_rect.size();i++) OBSTACLES.push_back(&obstacles_rect[i]);
         for(unsigned int i=0;i<obstacles_tr.size();i++) OBSTACLES.push_back(&obstacles_tr[i]);
         for(unsigned int i=0;i<ramps.size();i++) OBSTACLES.push_back(&ramps[i]);
@@ -501,7 +508,7 @@ int main(void){
 
                 drawScene(window, dt); //Wykonaj procedurę rysującą
                 glfwPollEvents(); //Wykonaj procedury callback w zalezności od zdarzeń jakie zaszły.
-                //printf("pos= %f %f %f\nlookAt %f %f %f\nah=%f,  av=%f\n\n", obserwator.getPosition().x, obserwator.getPosition().y, obserwator.getPosition().z, obserwator.getLookAtPoint().x, obserwator.getLookAtPoint().y, obserwator.getLookAtPoint().z, obserwator.getAngle_horizontal(), obserwator.getAngle_vertical());
+                if(cursor_centred) printf("pos= %f %f %f\n", obserwator.getPosition().x, obserwator.getPosition().y, obserwator.getPosition().z);
 
                 if(gravity_on) obserwator.fall(dt, OBSTACLES);
                 obserwator.move(dt, OBSTACLES);

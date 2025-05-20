@@ -1,6 +1,6 @@
 #pragma once
-#include "include.h"
-#include "shaderprogram.h"
+//#include "include.h"
+#include "shaders/shaderprogram.h"
 
 struct Vertex {
     glm::vec3 Position;
