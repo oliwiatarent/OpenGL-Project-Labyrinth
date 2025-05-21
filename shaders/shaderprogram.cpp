@@ -156,3 +156,8 @@ GLuint ShaderProgram::u(const char* variableName) {
 GLuint ShaderProgram::a(const char* variableName) {
 	return glGetAttribLocation(shaderProgram,variableName);
 }
+
+void ShaderProgram::setInt(const std::string &name, int value) const
+{ 
+	glUniform1i(glGetUniformLocation(shaderProgram, name.c_str()), value); 
+}
