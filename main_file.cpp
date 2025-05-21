@@ -356,6 +356,9 @@ void initOpenGLProgram(GLFWwindow* window) {
         observers_light = new ShaderProgram("shaders/v_distanced.glsl", NULL, "shaders/f_distanced.glsl");
 
         Models::loadTorch();
+        Models::loadFence();
+        Models::loadSpider();
+        Models::loadGhost();
 }
 void freeOpenGLProgram(GLFWwindow* window) {
         freeShaders();
