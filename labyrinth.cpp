@@ -148,16 +148,18 @@ void Labyrinth::print() {
     cout << "+" << endl;
 }
 
-void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float wallHeight, float wallWidth) {
-        ofstream sciany, podlogi, rampy, dachy;
+void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float wallHeight, float wallWidth, unsigned short liczba_pochodni){
+        ofstream sciany, podlogi, rampy, dachy, pochodnie;
         sciany.open("input/labyrinth_" + to_string(labyrinthNumber) + ".txt");
         podlogi.open("input/floors_" + to_string(labyrinthNumber) + ".txt");
         rampy.open("input/rampy_" + to_string(labyrinthNumber) + ".txt");
+        pochodnie.open("input/pochodnie_"+to_string(labyrinthNumber)+".txt");
 
         float floorThickness = 2.0f;
         int stairsRoomLength = 4, stairsRoomWidth = 2;
         
         int i;
+        
         // Wygenerowanie klatki schodowej dla wejścia
         // Generowanie ścian bocznych
         for (i = 0; i < stairsRoomLength; i++) {
@@ -172,7 +174,7 @@ void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float
             sciany << -(stairsRoomLength * wallWidth) << " " << labyrinthNumber * wallHeight << " " << j * wallWidth << " " << 
                 wallLength << " " << wallHeight << " " << wallWidth << " " << 0 << endl;
         }
-
+        
         // Generowanie podłogi
         if (labyrinthNumber == 0)
             // Generowanie podłogi w wejściu na parterze
@@ -263,69 +265,134 @@ void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float
                 << " " << stairsRoomLength * (wallWidth + wallLength) << " " << floorThickness << " " << stairsRoomWidth * wallWidth << endl;
         }
 
-
-
-        // Generowanie podłóg w labiryncie
-        podlogi << 0 << " " << labyrinthNumber * wallHeight - floorThickness  << " " << 0 << " " 
-            << szerokosc * (wallWidth + wallLength) << " " << floorThickness << " " << wysokosc * wallWidth << endl;
-
+        // Generowanie podłóg i dachu w labiryncie
         
-        // Generowanie dachu w labiryncie
-        if ((labyrinthNumber + 1) == numberOfFloors) {
-            podlogi << 0 << " " << (labyrinthNumber + 1) * wallHeight - floorThickness << " " << 0 << " " 
-                << szerokosc * (wallWidth + wallLength) << " " << floorThickness << " " << wysokosc * wallWidth << endl;
-        }
-
-
-
-        // Generowanie ścian labiryntu
         int k = 1;
+        bool dec_numberOfFloors = false;
+        while(true){
+            for (int y = 0; y < wysokosc; y++) {
+                for (int x = szerokosc - 1; x >= 0; x--) {
+                    
+                    // Generowanie kolumn, w celu wyeliminowania niedokładnych narożników labiryntu
+                    if (x == szerokosc - 1){ // Wygeneruj kolumny w skrajnie dolnej ścianie
+                        sciany << wallLength << " " << labyrinthNumber * (wallHeight+ floorThickness) - floorThickness << " " 
+                            << y * (wallWidth) << " " << wallLength << " " << floorThickness << " " << wallLength << " " << 1 << endl;
+                    }
+                    sciany << k * (wallWidth) + wallLength << " " << labyrinthNumber * (wallHeight+ floorThickness) - floorThickness  << " " << y * (wallWidth) << " " << 
+                            wallLength << " " << floorThickness << " " << wallLength << " " << 1 << endl;
+                    
+                    // Ściany pioniowe z punktu widzenia obserwatora
 
+                        sciany << k * (wallWidth) << " " << labyrinthNumber * (wallHeight+ floorThickness) - floorThickness  << " " << y * wallWidth << " " << 
+                            wallLength << " " << floorThickness << " " << wallWidth - wallLength << " " << 1 << endl;
+                    
+                    
+                    // Ściany poziome
+
+                        // Nie generuj ściany: wyjście z labiryntu 
+                        sciany << k * (wallWidth) << " " << labyrinthNumber * (wallHeight+ floorThickness) - floorThickness  << " " << y * wallWidth + wallLength << " " << 
+                            wallLength << " " << floorThickness << " " << wallWidth - wallLength << " " << 0 << endl;
+                    
+                    
+                    // Skrajnie prawa ściana labirytnu
+                    if (y == wysokosc - 1 && sciana[x][y][2]) {
+                        sciany << k * (wallWidth) << " " << labyrinthNumber * (wallHeight+ floorThickness) - floorThickness  << " " << (y + 1) * wallWidth << " "
+                            << wallLength << " " << floorThickness << " " << (wallWidth - wallLength) << " " << 1 << endl;
+                        //KOLUMNY w celu poprawnego cieniowania
+                        sciany << k * (wallWidth) + wallLength << " " << labyrinthNumber * (wallHeight+ floorThickness) - floorThickness << " " << (y + 1) * wallWidth << " "
+                            << wallLength << " " << floorThickness << " " << (wallLength) << " " << 1 << endl; 
+                    }
+                    
+                    // Skrajnie dolna
+                    if (x == szerokosc - 1 && sciana[x][y][1]) {
+                        sciany << (k * (wallLength + wallWidth)) - wallLength - wallWidth<< " "  << labyrinthNumber * (wallHeight+ floorThickness) - floorThickness  << " "  << y * wallWidth + wallLength
+                            << " " << wallLength << " " << floorThickness << " " << wallWidth - wallLength << " " << 0 << endl;
+                    }
+                    // podłoga między ścianami
+                    sciany << k * (wallWidth) << " " << labyrinthNumber * (wallHeight+ floorThickness) - floorThickness  << " " << y * (wallWidth) + wallLength << " " << 
+                            wallWidth - wallLength << " " << floorThickness << " " << wallWidth - wallLength << " " << 1 << endl;
+                    k++;
+                }
+                k = 1;
+            }
+
+            if((labyrinthNumber + 1) == numberOfFloors){
+                labyrinthNumber++;
+                dec_numberOfFloors = true;
+            }
+            else break;
+        }
+        if(dec_numberOfFloors) labyrinthNumber--;
+        
+        // Generowanie ścian labiryntu
+        k = 1;
         for (int y = 0; y < wysokosc; y++) {
             for (int x = szerokosc - 1; x >= 0; x--) {
                 
                 // Generowanie kolumn, w celu wyeliminowania niedokładnych narożników labiryntu
-                if (x == szerokosc - 1) // Wygeneruj kolumny w skrajnie dolnej ścianie
-                    sciany << wallLength << " " << labyrinthNumber * wallHeight << " " << y * (wallWidth) << " " << 
+                if (x == szerokosc - 1){ // Wygeneruj kolumny w skrajnie dolnej ścianie
+                    sciany << wallLength << " " << labyrinthNumber * wallHeight +floorThickness*labyrinthNumber << " " << y * (wallWidth) << " " << wallLength << " " << wallHeight << " " << wallLength << " " << 1 << endl;
+                }
+                sciany << k * (wallWidth) + wallLength << " " << labyrinthNumber * wallHeight+floorThickness*labyrinthNumber  << " " << y * (wallWidth) << " " << 
                         wallLength << " " << wallHeight << " " << wallLength << " " << 1 << endl;
-                sciany << k * (wallLength + wallWidth) + wallLength << " " << labyrinthNumber * wallHeight << " " << y * (wallWidth) << " " << 
-                        wallLength << " " << wallHeight << " " << wallLength << " " << 1 << endl;
-
+                
                 // Ściany pioniowe z punktu widzenia obserwatora
                 if (sciana[x][y][0]) {
-                    sciany << k * (wallLength + wallWidth) << " " << labyrinthNumber * wallHeight << " " << y * wallWidth << " " << 
-                        wallLength << " " << wallHeight << " " << wallWidth << " " << 1 << endl;
+                    sciany << k * (wallWidth) << " " << labyrinthNumber * wallHeight+floorThickness*labyrinthNumber  << " " << y * wallWidth << " " << 
+                        wallLength << " " << wallHeight << " " << wallWidth - wallLength << " " << 1 << endl;
                 }
-
+                
                 // Ściany poziome
                 if (sciana[x][y][3]) {
                     if (x != 0 || (x == 0 && y != wysokosc - 1)) // Nie generuj ściany: wyjście z labiryntu 
-                        sciany << k * (wallLength + wallWidth) << " " << labyrinthNumber * wallHeight << " " << y * wallWidth << " " << 
-                        wallLength << " " << wallHeight << " " << wallWidth << " " << 0 << endl;
+                        sciany << k * (wallWidth) << " " << labyrinthNumber * wallHeight+floorThickness*labyrinthNumber  << " " << y * wallWidth + wallLength << " " << 
+                        wallLength << " " << wallHeight << " " << wallWidth - wallLength << " " << 0 << endl;
                 }
-
+                
                 // Skrajnie prawa ściana labirytnu
                 if (y == wysokosc - 1 && sciana[x][y][2]) {
-                    sciany << k * (wallLength + wallWidth) << " " << labyrinthNumber * wallHeight << " " << (y + 1) * wallWidth << " "
-                        << wallLength << " " << wallHeight << " " << (wallWidth + wallLength) << " " << 1 << endl;
+                    sciany << k * (wallWidth) << " " << labyrinthNumber * wallHeight+floorThickness*labyrinthNumber  << " " << (y + 1) * wallWidth << " "
+                        << wallLength << " " << wallHeight << " " << (wallWidth - wallLength) << " " << 1 << endl;
+                    //KOLUMNY w celu poprawnego cieniowania
+                    sciany << k * (wallWidth) + wallLength << " " << labyrinthNumber * wallHeight +floorThickness*labyrinthNumber << " " << (y + 1) * wallWidth << " "
+                        << wallLength << " " << wallHeight << " " << (wallLength) << " " << 1 << endl; 
                 }
-
+                
                 // Skrajnie dolna
                 if (x == szerokosc - 1 && sciana[x][y][1]) {
                     if (y != 0) // Nie generuj ściany: wejście do labiryntu 
-                        sciany << (k * (wallLength + wallWidth)) - wallLength - wallWidth << " "  << labyrinthNumber * wallHeight << " " 
-                            << y * wallWidth << " " << wallLength << " " << wallHeight << " " << wallWidth << " " << 0 << endl;
+                        sciany << (k * (wallLength + wallWidth)) - wallLength - wallWidth<< " "  << labyrinthNumber * wallHeight+floorThickness*labyrinthNumber  << " "  << y * wallWidth + wallLength
+                            << " " << wallLength << " " << wallHeight << " " << wallWidth - wallLength << " " << 0 << endl;
                 }
-
                 k++;
             }
 
             k = 1;
         }
 
+        float torch_radius = 1.0;
+        unsigned int liczba_prob = 100000;
+        for(unsigned short nr_pochodni=0, proba=0;nr_pochodni<liczba_pochodni/2;){
+            unsigned short x = rand() % (szerokosc-1), y = rand() % (wysokosc-1);
+
+            if(sciana[x][y][1] && !sciana[x][y][2] && !sciana[x+1][y+1][0] && sciana[x+1][y+1][3]){
+                nr_pochodni++;
+                pochodnie<< (szerokosc-x-1)*(wallWidth)+wallLength/2 - torch_radius <<" "<< (labyrinthNumber+1) * wallHeight - wallHeight/3 <<" "<< (y+1)*(wallWidth)+wallLength/2 << endl;
+                pochodnie<< (szerokosc-x-1)*(wallWidth)+wallLength/2 + torch_radius <<" "<< (labyrinthNumber+1) * wallHeight - wallHeight/3 <<" "<< (y+1)*(wallWidth)+wallLength/2 << endl;
+                printf("f1 %hd %hd\n", x, y);
+            }
+            else if(!sciana[x][y][1] && sciana[x][y][2] && sciana[x+1][y+1][0] && !sciana[x+1][y+1][3]){
+                nr_pochodni++;
+                pochodnie<< (szerokosc-x-1)*(wallWidth) +wallLength/2<<" "<< (labyrinthNumber+1) * wallHeight+ - wallHeight/3 <<" "<< (y+1)*(wallWidth)+wallLength/2 - torch_radius << endl;
+                pochodnie<< (szerokosc-x-1)*(wallWidth) +wallLength/2 <<" "<< (labyrinthNumber+1) * wallHeight+ - wallHeight/3 <<" "<< (y+1)*(wallWidth)+wallLength/2 + torch_radius << endl;
+                printf("f2 %hd %hd\n", x, y);
+            }
+        }
+        
         sciany.close();
         podlogi.close();
         rampy.close();
+        pochodnie.close();
 }
 
 

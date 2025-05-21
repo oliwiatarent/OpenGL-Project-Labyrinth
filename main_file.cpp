@@ -353,7 +353,7 @@ void initOpenGLProgram(GLFWwindow* window) {
         TEXTURES.push_back(readTexture("assests/textures/marble.png"));
         wall_creator.assign_next_texture(TEXTURES);
         sp = new ShaderProgram("shaders/v_test.glsl", NULL, "shaders/f_test.glsl");
-        observers_light = new ShaderProgram("shaders/v_distanced.glsl", NULL, "shaders/f_distanced.glsl");
+        observers_light =  new ShaderProgram("shaders/v_distanced.glsl", NULL, "shaders/f_distanced.glsl");
 }
 void freeOpenGLProgram(GLFWwindow* window) {
         freeShaders();
@@ -374,35 +374,28 @@ void prepareScene(){
                 srand(std::chrono::high_resolution_clock::now().time_since_epoch().count() + i * 1337);
 
                 Labyrinth labyrinth = Labyrinth(labyrinthHeight, labirynthWidth);
-                // labyrinth.print();
-                labyrinth.generateCoordinates(i, wallLength, wallHeight, wallWidth);
+                labyrinth.print();
+                labyrinth.generateCoordinates(i, wallLength, wallHeight, wallWidth, maxTorchesPerFloor);
 
                 ifstream sciany("input/labyrinth_" + to_string(i) + ".txt");
                 ifstream podlogi("input/floors_" + to_string(i) + ".txt");
                 ifstream rampy("input/rampy_" + to_string(i) + ".txt");
+                ifstream pochodnie("input/pochodnie_"+ to_string(i) + ".txt");
                 string line;
 
                 while (getline(sciany, line)) {
                         istringstream iss(line);
                         float xl, yd, zb, dlugosc, wysokosc, szerokosc;
                         int horizontal;
-                        float torch_radius = 1.0;
 
                         if (iss >> xl >> yd >> zb >> dlugosc >> wysokosc >> szerokosc >> horizontal) {
                                 //printf("xl = %lf, yd = %lf, zb = %lf, d = %lf, w = %lf, s = %lf, h = %d\n", xl, yd, zb, dlugosc, wysokosc, szerokosc, horizontal);
 
                                 Wall_rect mur;
-                                mur = Wall_rect(xl-(float)(rand()%10)/1000, yd, zb-(float)(rand()%10)/1000, dlugosc-(float)(rand()%10)/1000, wysokosc-(float)(rand()%10)/1000, szerokosc-(float)(rand()%10)/1000);
+                                mur = Wall_rect(xl, yd, zb, dlugosc, wysokosc, szerokosc);
                                 mur.setAngle_vertical(0);
                                 mur.setTexture(TEXTURES[1]);
                                 if (horizontal) mur.setAngle_horizontal(PI/2); else mur.setAngle_horizontal(0);
-
-                                if(rand()%12==0 && torches[i].size() < maxTorchesPerFloor){
-                                        if(!horizontal){
-                                                torches[i].push_back(glm::vec3(xl+dlugosc+torch_radius, yd+wysokosc*0.4, zb+(szerokosc+dlugosc)*0.5));
-                                                torches[i].push_back(glm::vec3(xl-torch_radius, yd+wysokosc*0.4, zb+(szerokosc+dlugosc)*0.5));
-                                        } 
-                                }
                                 obstacles_rect.push_back(mur);
                         }
                 }
@@ -433,7 +426,7 @@ void prepareScene(){
                         int klatka;
 
                         if (iss >> xl >> yd >> zb >> dlugosc >> wysokosc >> szerokosc >> klatka) {
-                                printf("xl = %lf, yd = %lf, zb = %lf, d = %lf, w = %lf, s = %lf\n", xl, yd, zb, dlugosc, wysokosc, szerokosc);
+                                //printf("xl = %lf, yd = %lf, zb = %lf, d = %lf, w = %lf, s = %lf\n", xl, yd, zb, dlugosc, wysokosc, szerokosc);
 
                                 Ramp rampa = Ramp(glm::vec3(xl, yd, zb), dlugosc, wysokosc, szerokosc);
                                 if (!klatka) rampa.setAngle_horizontal(3*PI/2); else rampa.setAngle_horizontal(PI/2);
@@ -442,10 +435,20 @@ void prepareScene(){
                         }
                 }
 
+                
+                while (getline(pochodnie, line)) {
+                        istringstream iss(line);
+                        float x, y, z;
+
+                        if (iss >> x >> y >> z) {
+                                torches[i].push_back(glm::vec3(x, y, z));
+                        }
+                }
+
                 sciany.close();
                 podlogi.close();
                 rampy.close();
-
+                pochodnie.close();
         }
 
         for(unsigned int i=0;i<obstacles_rect.size();i++) OBSTACLES.push_back(&obstacles_rect[i]);
@@ -457,7 +460,7 @@ void drawScene(GLFWwindow* window, float dt){
         static double time = 0;
         time += dt;
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //Wyczyść bufor koloru i bufor głębokości
-        short current_floor = obserwator.getPosition().y / wallHeight;
+        short current_floor =0;//= obserwator.getPosition().y / wallHeight;
         sort(torches[current_floor].begin(), torches[current_floor].end(), porownaj_odleglosci);
 
         glm::mat4 M = glm::mat4(1.0f); //Zainicjuj macierz modelu macierzą jednostkową
@@ -480,7 +483,7 @@ void drawScene(GLFWwindow* window, float dt){
                 var_name[8] = 48 + i;
                 glUniform4f(observers_light->u(var_name), torches[current_floor][i].x, torches[current_floor][i].y, torches[current_floor][i].z, 0.0);
         }
-        glUniform1f(observers_light->u("light_power"), (float)(4.5+1.0*sin(time/2)));
+        glUniform1f(observers_light->u("light_power"), (float)(3.5+1.0*sin(time/2)));
         for(unsigned int i=0;i<OBSTACLES.size();i++){
                 OBSTACLES[i]->draw(P, V, observers_light);
         }
@@ -530,7 +533,7 @@ int main(void){
 
                 drawScene(window, dt); //Wykonaj procedurę rysującą
                 glfwPollEvents(); //Wykonaj procedury callback w zalezności od zdarzeń jakie zaszły.
-                //if(cursor_centred) printf("pos= %f %f %f\n", obserwator.getPosition().x, obserwator.getPosition().y, obserwator.getPosition().z);
+                if(cursor_centred) printf("pos= %f %f %f\n", obserwator.getPosition().x, obserwator.getPosition().y, obserwator.getPosition().z);
 
                 if(gravity_on) obserwator.fall(dt, OBSTACLES);
                 obserwator.move(dt, OBSTACLES);

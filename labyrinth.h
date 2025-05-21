@@ -37,5 +37,5 @@ public:
     void addWall(Punkt p);
     void updateWalls(Punkt p);
     void print();
-    void generateCoordinates(int numberOfLabyrinths, float wallLength, float wallheight, float wallWidth);
+    void generateCoordinates(int numberOfLabyrinths, float wallLength, float wallheight, float wallWidth, unsigned short liczba_pochodni);
 };
