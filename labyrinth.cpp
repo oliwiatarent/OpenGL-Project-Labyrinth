@@ -291,7 +291,7 @@ void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float
                 sciany << k * (wallLength + wallWidth) + wallLength << " " << labyrinthNumber * wallHeight << " " << y * (wallWidth) << " " << 
                         wallLength << " " << wallHeight << " " << wallLength << " " << 1 << endl;
 
-                // Ściany pioniowe z punktu widzenia obserwatora
+                // Ściany pionowe z punktu widzenia obserwatora
                 if (sciana[x][y][0]) {
                     sciany << k * (wallLength + wallWidth) << " " << labyrinthNumber * wallHeight << " " << y * wallWidth << " " << 
                         wallLength << " " << wallHeight << " " << wallWidth << " " << 1 << endl;
@@ -300,8 +300,8 @@ void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float
                 // Ściany poziome
                 if (sciana[x][y][3]) {
                     if (x != 0 || (x == 0 && y != wysokosc - 1)) // Nie generuj ściany: wyjście z labiryntu 
-                        sciany << k * (wallLength + wallWidth) << " " << labyrinthNumber * wallHeight << " " << y * wallWidth << " " << 
-                        wallLength << " " << wallHeight << " " << wallWidth << " " << 0 << endl;
+                        sciany << k * (wallLength + wallWidth) << " " << labyrinthNumber * wallHeight << " " << y * wallWidth + wallLength << " " << 
+                        wallLength << " " << wallHeight << " " << wallWidth - wallLength << " " << 0 << endl;
                 }
 
                 // Skrajnie prawa ściana labirytnu
@@ -327,5 +327,3 @@ void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float
         podlogi.close();
         rampy.close();
 }
-
-

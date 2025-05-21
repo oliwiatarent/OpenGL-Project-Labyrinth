@@ -354,6 +354,8 @@ void initOpenGLProgram(GLFWwindow* window) {
         wall_creator.assign_next_texture(TEXTURES);
         sp = new ShaderProgram("shaders/v_test.glsl", NULL, "shaders/f_test.glsl");
         observers_light = new ShaderProgram("shaders/v_distanced.glsl", NULL, "shaders/f_distanced.glsl");
+
+        Models::loadTorch();
 }
 void freeOpenGLProgram(GLFWwindow* window) {
         freeShaders();
@@ -386,7 +388,7 @@ void prepareScene(){
                         istringstream iss(line);
                         float xl, yd, zb, dlugosc, wysokosc, szerokosc;
                         int horizontal;
-                        float torch_radius = 1.0;
+                        float torch_radius = 0.5;
 
                         if (iss >> xl >> yd >> zb >> dlugosc >> wysokosc >> szerokosc >> horizontal) {
                                 //printf("xl = %lf, yd = %lf, zb = %lf, d = %lf, w = %lf, s = %lf, h = %d\n", xl, yd, zb, dlugosc, wysokosc, szerokosc, horizontal);
@@ -467,11 +469,12 @@ void drawScene(GLFWwindow* window, float dt){
         for(unsigned int i=0;i<torches[current_floor].size();i++){
                 M = glm::mat4(1.0f);
                 M = glm::translate(M, torches[current_floor][i]);
+                M = glm::scale(M, glm::vec3(0.02f));
                 glUniform4f(spLambert->u("color"), 0.0, 1.0, 0.0, 1);
                 //Załadowanie macierzy modelu do programu cieniującego
                 glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(M));
                 M = glm::translate(M, glm::vec3(1.0f, 0.0f, 0.0f));
-                Models::teapot.drawSolid(); //Narysowanie obiektu
+                Models::torch.Draw(*spLambert); //Narysowanie obiektu
         }
 
         glUniform4f(observers_light->u("camera_position"), obserwator.getCameraPosition().x, obserwator.getCameraPosition().y, obserwator.getCameraPosition().z, 0.0);
