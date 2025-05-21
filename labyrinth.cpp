@@ -371,21 +371,20 @@ void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float
         }
 
         float torch_radius = 1.0;
-        unsigned int liczba_prob = 100000;
         for(unsigned short nr_pochodni=0, proba=0;nr_pochodni<liczba_pochodni/2;){
             unsigned short x = rand() % (szerokosc-1), y = rand() % (wysokosc-1);
 
             if(sciana[x][y][1] && !sciana[x][y][2] && !sciana[x+1][y+1][0] && sciana[x+1][y+1][3]){
                 nr_pochodni++;
-                pochodnie<< (szerokosc-x-1)*(wallWidth)+wallLength/2 - torch_radius <<" "<< (labyrinthNumber+1) * wallHeight - wallHeight/2 <<" "<< (y+1)*(wallWidth)+wallLength/2 << endl;
-                pochodnie<< (szerokosc-x-1)*(wallWidth)+wallLength/2 + torch_radius <<" "<< (labyrinthNumber+1) * wallHeight - wallHeight/2 <<" "<< (y+1)*(wallWidth)+wallLength/2 << endl;
-                printf("f1 %hd %hd\n", x, y);
+                pochodnie<< (szerokosc-x-1)*(wallWidth)+wallLength/2 - torch_radius <<" "<< (labyrinthNumber+1) * (wallHeight+floorThickness) - wallHeight/2 -floorThickness<<" "<< (y+1)*(wallWidth)+wallLength/2 <<" "<<0<<endl;
+                pochodnie<< (szerokosc-x-1)*(wallWidth)+wallLength/2 + torch_radius <<" "<< (labyrinthNumber+1) * (wallHeight+floorThickness) - wallHeight/2 -floorThickness<<" "<< (y+1)*(wallWidth)+wallLength/2 <<" "<<1<<endl;
+                //printf("f1 %hd %hd\n", x, y);
             }
             else if(!sciana[x][y][1] && sciana[x][y][2] && sciana[x+1][y+1][0] && !sciana[x+1][y+1][3]){
                 nr_pochodni++;
-                pochodnie<< (szerokosc-x-1)*(wallWidth) +wallLength/2<<" "<< (labyrinthNumber+1) * wallHeight+ - wallHeight/2 <<" "<< (y+1)*(wallWidth)+wallLength/2 - torch_radius << endl;
-                pochodnie<< (szerokosc-x-1)*(wallWidth) +wallLength/2 <<" "<< (labyrinthNumber+1) * wallHeight+ - wallHeight/2 <<" "<< (y+1)*(wallWidth)+wallLength/2 + torch_radius << endl;
-                printf("f2 %hd %hd\n", x, y);
+                pochodnie<< (szerokosc-x-1)*(wallWidth) +wallLength/2<<" "<< (labyrinthNumber+1) * (wallHeight+floorThickness) - wallHeight/2 -floorThickness <<" "<< (y+1)*(wallWidth)+wallLength/2 - torch_radius <<" "<<2<<endl;
+                pochodnie<< (szerokosc-x-1)*(wallWidth) +wallLength/2 <<" "<< (labyrinthNumber+1) * (wallHeight+floorThickness) - wallHeight/2 -floorThickness <<" "<< (y+1)*(wallWidth)+wallLength/2 + torch_radius <<" "<<3<<endl;
+                //printf("f2 %hd %hd\n", x, y);
             }
         }
         

@@ -27,6 +27,11 @@
 #include <assimp/postprocess.h>
 #include "externalmodel.h"
 
+struct Torch{
+        glm::vec3 position;
+        char facing = 0; //{0=X+}{1=X-}{2=Z+}{3=Z-}
+};
+
 using namespace std;
 
 float zNear = 0.01; // bliższa odległość odcinania
@@ -43,7 +48,7 @@ bool gravity_on = false;
 
 int numberOfFloors = 3;
 float wallHeight = 9.0f;
-std::vector<std::vector<glm::vec3>> torches;
+std::vector<std::vector<struct Torch>> torches;
 std::vector<GLuint> TEXTURES;
 std::vector<Wall_rect> obstacles_rect;
 std::vector<Wall_trian> obstacles_tr;
@@ -55,9 +60,36 @@ Observer obserwator;
 ShaderProgram* sp;
 ShaderProgram* observers_light;
 
+void draw_torch(struct Torch torch, ShaderProgram* s_p){
+        glm::mat4 M = glm::mat4(1.0f);
+        M = glm::translate(M, torch.position);
+        M = glm::scale(M, glm::vec3(0.02f));
+        glUniform4f(s_p->u("color"), 0.0, 1.0, 0.0, 1);
+        if(torch.facing==48){
+                M = glm::rotate(M, PI/10, glm::vec3(0.0, 0.0, 1.0));
+                M = glm::rotate(M, PI/2, glm::vec3(0.0, 1.0, 0.0));
+        } 
+        else if(torch.facing==49){
+                M = glm::rotate(M, -PI/10, glm::vec3(0.0, 0.0, 1.0));
+                M = glm::rotate(M, -PI/2, glm::vec3(0.0, 1.0, 0.0));
+        } 
+        else if(torch.facing==50){
+                M = glm::rotate(M, -PI/10, glm::vec3(1.0, 0.0, 0.0));
+                M = glm::rotate(M, 0.0f, glm::vec3(0.0, 1.0, 0.0));
+        }       
+        else if(torch.facing==51){
+                M = glm::rotate(M, PI/10, glm::vec3(1.0, 0.0, 0.0));
+                M = glm::rotate(M, PI, glm::vec3(0.0, 1.0, 0.0));
+        } 
+        glUniformMatrix4fv(s_p->u("M"), 1, false, glm::value_ptr(M));
+        Models::torch.Draw(*s_p); //Narysowanie obiektu
+}
 bool porownaj_odleglosci(glm::vec3 p1, glm::vec3 p2){
         glm::vec3 pozycjaObs = obserwator.getPosition();
         return pow(pozycjaObs.x - p1.x, 2) + pow(pozycjaObs.z - p1.z, 2) < pow(pozycjaObs.x - p2.x, 2) + pow(pozycjaObs.z - p2.z, 2);
+}
+bool porownaj_pochodnie(struct Torch t1, struct Torch t2){
+        return porownaj_odleglosci(t1.position, t2.position);
 }
 float clamp(float value, float min, float max){
         float result = value;
@@ -444,9 +476,13 @@ void prepareScene(){
                 while (getline(pochodnie, line)) {
                         istringstream iss(line);
                         float x, y, z;
+                        char f;
 
-                        if (iss >> x >> y >> z) {
-                                torches[i].push_back(glm::vec3(x, y, z));
+                        if (iss >> x >> y >> z >> f) {
+                                Torch tmp;
+                                tmp.position = glm::vec3(x,y,z);
+                                tmp.facing = f;
+                                torches[i].push_back(tmp);
                         }
                 }
 
@@ -465,30 +501,30 @@ void drawScene(GLFWwindow* window, float dt){
         static double time = 0;
         time += dt;
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //Wyczyść bufor koloru i bufor głębokości
-        short current_floor =0;//= obserwator.getPosition().y / wallHeight;
-        sort(torches[current_floor].begin(), torches[current_floor].end(), porownaj_odleglosci);
+        short current_floor = obserwator.getPosition().y / wallHeight;
+        sort(torches[current_floor].begin(), torches[current_floor].end(), porownaj_pochodnie);
 
         glm::mat4 M = glm::mat4(1.0f); //Zainicjuj macierz modelu macierzą jednostkową
         glm::mat4 V = glm::lookAt(obserwator.getCameraPosition(), obserwator.getLookAtPoint(), glm::vec3(0.0f, 1.0f, 0.0f)); //Wylicz macierz widoku
         glm::mat4 P = glm::perspective(glm::radians(50.0f), aspectRatio, zNear, zFar); //Wylicz macierz rzutowania
 
         for(unsigned int i=0;i<torches[current_floor].size();i++){
-                M = glm::mat4(1.0f);
-                M = glm::translate(M, torches[current_floor][i]);
+                /*M = glm::mat4(1.0f);
+                M = glm::translate(M, torches[current_floor][i].position);
                 M = glm::scale(M, glm::vec3(0.02f));
                 glUniform4f(spLambert->u("color"), 0.0, 1.0, 0.0, 1);
-                //Załadowanie macierzy modelu do programu cieniującego
                 M = glm::rotate(M, PI/10, glm::vec3(0.0, 0.0, 1.0));
                 glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(M));
-
                 Models::torch.Draw(*observers_light); //Narysowanie obiektu
+                */
+               draw_torch(torches[current_floor][i], observers_light);
         }
 
         glUniform4f(observers_light->u("camera_position"), obserwator.getCameraPosition().x, obserwator.getCameraPosition().y, obserwator.getCameraPosition().z, 0.0);
         for(unsigned short i=0;i<maxActive_lights;i++){
                 char var_name[] = "torches[X]";
                 var_name[8] = 48 + i;
-                glUniform4f(observers_light->u(var_name), torches[current_floor][i].x, torches[current_floor][i].y, torches[current_floor][i].z, 0.0);
+                glUniform4f(observers_light->u(var_name), torches[current_floor][i].position.x, torches[current_floor][i].position.y, torches[current_floor][i].position.z, 0.0);
         }
         glUniform1f(observers_light->u("light_power"), (float)(3.5+1.0*sin(time/2)));
         for(unsigned int i=0;i<OBSTACLES.size();i++){
