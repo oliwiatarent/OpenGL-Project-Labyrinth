@@ -20,13 +20,14 @@ out vec2 i_tc;
 void main(void) {
     d = distance(camera_position, M*vertex);
 
-    float new_distance;
+    float torch_distance, nearest_torch_distance = 999.9;
     for(int i=0;i<torches.length();i++){
-        new_distance = distance(torches[i], M*vertex);
-        if(d > new_distance) d = new_distance;
+        torch_distance = distance(torches[i], M*vertex);
+        if(nearest_torch_distance > torch_distance) nearest_torch_distance = torch_distance;
     }
 
     d = clamp(pow(light_power, 1.7)/pow(d, 1.7), 0.01, 1.0);
+    d = d + clamp(pow(light_power, 1.9)/pow(nearest_torch_distance, 1.9), 0.01, 1.0);
 
     i_tc=texCoord;
     gl_Position=P*V*M*vertex;

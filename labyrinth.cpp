@@ -377,14 +377,14 @@ void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float
 
             if(sciana[x][y][1] && !sciana[x][y][2] && !sciana[x+1][y+1][0] && sciana[x+1][y+1][3]){
                 nr_pochodni++;
-                pochodnie<< (szerokosc-x-1)*(wallWidth)+wallLength/2 - torch_radius <<" "<< (labyrinthNumber+1) * wallHeight - wallHeight/3 <<" "<< (y+1)*(wallWidth)+wallLength/2 << endl;
-                pochodnie<< (szerokosc-x-1)*(wallWidth)+wallLength/2 + torch_radius <<" "<< (labyrinthNumber+1) * wallHeight - wallHeight/3 <<" "<< (y+1)*(wallWidth)+wallLength/2 << endl;
+                pochodnie<< (szerokosc-x-1)*(wallWidth)+wallLength/2 - torch_radius <<" "<< (labyrinthNumber+1) * wallHeight - wallHeight/2 <<" "<< (y+1)*(wallWidth)+wallLength/2 << endl;
+                pochodnie<< (szerokosc-x-1)*(wallWidth)+wallLength/2 + torch_radius <<" "<< (labyrinthNumber+1) * wallHeight - wallHeight/2 <<" "<< (y+1)*(wallWidth)+wallLength/2 << endl;
                 printf("f1 %hd %hd\n", x, y);
             }
             else if(!sciana[x][y][1] && sciana[x][y][2] && sciana[x+1][y+1][0] && !sciana[x+1][y+1][3]){
                 nr_pochodni++;
-                pochodnie<< (szerokosc-x-1)*(wallWidth) +wallLength/2<<" "<< (labyrinthNumber+1) * wallHeight+ - wallHeight/3 <<" "<< (y+1)*(wallWidth)+wallLength/2 - torch_radius << endl;
-                pochodnie<< (szerokosc-x-1)*(wallWidth) +wallLength/2 <<" "<< (labyrinthNumber+1) * wallHeight+ - wallHeight/3 <<" "<< (y+1)*(wallWidth)+wallLength/2 + torch_radius << endl;
+                pochodnie<< (szerokosc-x-1)*(wallWidth) +wallLength/2<<" "<< (labyrinthNumber+1) * wallHeight+ - wallHeight/2 <<" "<< (y+1)*(wallWidth)+wallLength/2 - torch_radius << endl;
+                pochodnie<< (szerokosc-x-1)*(wallWidth) +wallLength/2 <<" "<< (labyrinthNumber+1) * wallHeight+ - wallHeight/2 <<" "<< (y+1)*(wallWidth)+wallLength/2 + torch_radius << endl;
                 printf("f2 %hd %hd\n", x, y);
             }
         }
