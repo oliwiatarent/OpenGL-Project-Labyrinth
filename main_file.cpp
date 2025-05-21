@@ -353,7 +353,7 @@ void initOpenGLProgram(GLFWwindow* window) {
         TEXTURES.push_back(readTexture("assests/textures/marble.png"));
         wall_creator.assign_next_texture(TEXTURES);
         sp = new ShaderProgram("shaders/v_test.glsl", NULL, "shaders/f_test.glsl");
-        observers_light = new ShaderProgram("shaders/v_distanced.glsl", NULL, "shaders/f_distanced.glsl");
+        observers_light = sp;// new ShaderProgram("shaders/v_distanced.glsl", NULL, "shaders/f_distanced.glsl");
 
         Models::loadTorch();
         Models::loadFence();
@@ -367,7 +367,7 @@ void freeOpenGLProgram(GLFWwindow* window) {
 }
 void prepareMoveables(){
         obserwator.setRadius(0.02);
-        obserwator.setPosition(-14, 1, 4);
+        obserwator.setPosition(-10, 2, -10);
         obserwator.setVelocity_value(10);
 }
 void prepareScene(){
@@ -478,9 +478,10 @@ void drawScene(GLFWwindow* window, float dt){
                 M = glm::scale(M, glm::vec3(0.02f));
                 glUniform4f(spLambert->u("color"), 0.0, 1.0, 0.0, 1);
                 //Załadowanie macierzy modelu do programu cieniującego
+                M = glm::rotate(M, PI/10, glm::vec3(0.0, 0.0, 1.0));
                 glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(M));
-                M = glm::translate(M, glm::vec3(1.0f, 0.0f, 0.0f));
-                Models::torch.Draw(*spLambert); //Narysowanie obiektu
+
+                Models::torch.Draw(*observers_light); //Narysowanie obiektu
         }
 
         glUniform4f(observers_light->u("camera_position"), obserwator.getCameraPosition().x, obserwator.getCameraPosition().y, obserwator.getCameraPosition().z, 0.0);
