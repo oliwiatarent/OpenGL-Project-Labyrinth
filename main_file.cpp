@@ -353,7 +353,7 @@ void initOpenGLProgram(GLFWwindow* window) {
         TEXTURES.push_back(readTexture("assests/textures/marble.png"));
         wall_creator.assign_next_texture(TEXTURES);
         sp = new ShaderProgram("shaders/v_test.glsl", NULL, "shaders/f_test.glsl");
-        observers_light = sp;// new ShaderProgram("shaders/v_distanced.glsl", NULL, "shaders/f_distanced.glsl");
+        observers_light = new ShaderProgram("shaders/v_distanced.glsl", NULL, "shaders/f_distanced.glsl");
 
         Models::loadTorch();
         Models::loadFence();
@@ -367,7 +367,7 @@ void freeOpenGLProgram(GLFWwindow* window) {
 }
 void prepareMoveables(){
         obserwator.setRadius(0.02);
-        obserwator.setPosition(-10, 2, -10);
+        obserwator.setPosition(4, 2, 4);
         obserwator.setVelocity_value(10);
 }
 void prepareScene(){
