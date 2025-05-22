@@ -34,7 +34,11 @@ struct Torch{
 
 struct Fence {
         glm::vec3 position;
+        glm::vec3 size = glm::vec3(6.0f, 8.0f, 0.5f);
+        glm::mat4 modelMatrix;
+        
         bool rotate = 0;
+        bool selected = false;
 };
 
 using namespace std;
@@ -101,8 +105,16 @@ void draw_fence(Fence fence) {
                 M = glm::rotate(M, -PI/2, glm::vec3(1.0f, 0.0f, 0.0f));
                 M = glm::rotate(M, PI/2, glm::vec3(0.0f, 0.0f, 1.0f));
         }
+
+        if (fence.selected) {
+                M = glm::rotate(M, PI/2, glm::vec3(0.0f, 0.0f, 1.0f));
+        }
+
         M = glm::scale(M, scaleFactor);
         glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(M));
+
+        fence.modelMatrix = M;
+
         Models::fence.Draw(*spLambert);
 }
 
@@ -122,6 +134,31 @@ float clamp(float value, float min, float max){
 float randFloat(){
         float result = rand() % 1000;
         return (float) result / 1000;
+}
+
+bool rayIntersectsAABB(const glm::vec3& rayOrigin, const glm::vec3& rayDir, const glm::vec3& boxMin, const glm::vec3& boxMax, float& t) {
+    float tmin = (boxMin.x - rayOrigin.x) / rayDir.x;
+    float tmax = (boxMax.x - rayOrigin.x) / rayDir.x;
+    if (tmin > tmax) std::swap(tmin, tmax);
+
+    float tymin = (boxMin.y - rayOrigin.y) / rayDir.y;
+    float tymax = (boxMax.y - rayOrigin.y) / rayDir.y;
+    if (tymin > tymax) std::swap(tymin, tymax);
+
+    if ((tmin > tymax) || (tymin > tmax)) return false;
+    if (tymin > tmin) tmin = tymin;
+    if (tymax < tmax) tmax = tymax;
+
+    float tzmin = (boxMin.z - rayOrigin.z) / rayDir.z;
+    float tzmax = (boxMax.z - rayOrigin.z) / rayDir.z;
+    if (tzmin > tzmax) std::swap(tzmin, tzmax);
+
+    if ((tmin > tzmax) || (tzmin > tmax)) return false;
+    if (tzmin > tmin) tmin = tzmin;
+    if (tzmax < tmax) tmax = tzmax;
+
+    t = tmin;
+    return true;
 }
 
 void error_callback(int error, const char* description) {
@@ -364,6 +401,32 @@ void cursor_position_callback(GLFWwindow* window, double xpos, double ypos){
                 glfwSetCursorPos(window, screenwidth/2, screenheight/2);
         }
 }
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+                glm::vec3 ray = obserwator.getCameraViewVector();
+                glm::vec3 origin = obserwator.getCameraPosition();
+
+                int selectedIndex = -1;
+                float closestT = 1e9;
+
+                for (int i = 0; i < fences.size(); ++i) {
+                        glm::vec3 halfSize = fences[i].size * 0.5f;
+                        glm::vec3 boxMin = fences[i].position - halfSize;
+                        glm::vec3 boxMax = fences[i].position + halfSize;
+
+                        float t;
+                        if (rayIntersectsAABB(origin, ray, boxMin, boxMax, t)) {
+                                if (t < closestT) {
+                                        closestT = t;
+                                        selectedIndex = i;
+                                }
+                        }
+                }
+
+                // Wyznacz najbliższy
+                fences[selectedIndex].selected = true;
+        }
+}
 GLuint readTexture(const char* scianyname) {
         GLuint tex;
         glActiveTexture(GL_TEXTURE0);
@@ -398,6 +461,7 @@ void initOpenGLProgram(GLFWwindow* window) {
         glfwSetKeyCallback(window, key_callback);
         glfwSetCursorPosCallback(window, cursor_position_callback);
         glfwSetWindowSizeCallback(window,windowResizeCallback);
+        glfwSetMouseButtonCallback(window, mouse_button_callback);
 
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         glfwSetCursorPos(window, screenwidth/2, screenheight/2);
@@ -419,6 +483,7 @@ void freeOpenGLProgram(GLFWwindow* window) {
         //************Tutaj umieszczaj kod, który należy wykonać po zakończeniu pętli głównej************
         for(unsigned int i=0;i<TEXTURES.size();i++) glDeleteTextures(1, &TEXTURES[i]);
 }
+
 void prepareMoveables(){
         obserwator.setRadius(0.02);
         obserwator.setPosition(4, 2, 4);
