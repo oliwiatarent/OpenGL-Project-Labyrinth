@@ -78,6 +78,7 @@ class Observer : public Moveable{
         void change_angle_vertical(float dAlpha);
         glm::vec3 getLookAtPoint(); // wzraca punkt w odległości 1 od obserwatora, na który jest skierowany jego wzrok
         glm::vec3 getCameraPosition(); // wzraca punkt, w którym znajduje się 'kamera' obserwatora
+        glm::vec3 getCameraViewVector(); // wzraca znormalizowany wektor kierunku, w którym zwrócona jest kamera
 };  
 
 #endif

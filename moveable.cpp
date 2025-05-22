@@ -273,17 +273,21 @@ void Observer::change_angle_vertical(float dAlpha){
 }
 
 glm::vec3 Observer::getLookAtPoint(){
-    glm::vec3 pointOnSphere;
-    pointOnSphere.y = sin(angle_vertical);
-    pointOnSphere.x = cos(angle_horizontal) * cos(angle_vertical);
-    pointOnSphere.z = sin(angle_horizontal) * cos(angle_vertical);
-    return getCameraPosition() + pointOnSphere;
+    return getCameraPosition() + getCameraViewVector();
 }
 
 glm::vec3 Observer::getCameraPosition(){
     glm::vec3 camera_position = position;
     camera_position.y += height;
     return camera_position;
+}
+
+glm::vec3 Observer::getCameraViewVector(){
+    glm::vec3 pointOnSphere;
+    pointOnSphere.y = sin(angle_vertical);
+    pointOnSphere.x = cos(angle_horizontal) * cos(angle_vertical);
+    pointOnSphere.z = sin(angle_horizontal) * cos(angle_vertical);  
+    return pointOnSphere;
 }
 
 #undef maxClimbAngle
