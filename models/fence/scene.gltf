@@ -3,218 +3,109 @@
     {
       "bufferView": 2,
       "componentType": 5126,
-      "count": 350,
+      "count": 356,
+      "max": [
+        0.125,
+        1.5,
+        2.006875991821289
+      ],
+      "min": [
+        -0.125,
+        -1.5,
+        -2.006875991821289
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 4272,
+      "componentType": 5126,
+      "count": 356,
       "max": [
         1.0,
-        0.8257030248641968,
-        0.0482574999332428
-      ],
-      "min": [
-        -1.0,
-        -0.8257030248641968,
-        -0.0482574999332428
-      ],
-      "type": "VEC3"
-    },
-    {
-      "bufferView": 2,
-      "byteOffset": 4200,
-      "componentType": 5126,
-      "count": 350,
-      "max": [
-        1.0,
-        0.9517422318458557,
-        0.9370723962783813
-      ],
-      "min": [
-        -1.0,
-        -0.8692657947540283,
-        -0.9370723962783813
-      ],
-      "type": "VEC3"
-    },
-    {
-      "bufferView": 3,
-      "componentType": 5126,
-      "count": 350,
-      "max": [
-        0.9712470173835754,
-        0.9866880178451538,
-        0.9999529719352722,
-        1.0
-      ],
-      "min": [
-        -0.9712470173835754,
-        -0.9892339706420898,
-        -0.9769830107688904,
-        -1.0
-      ],
-      "type": "VEC4"
-    },
-    {
-      "bufferView": 1,
-      "componentType": 5126,
-      "count": 350,
-      "max": [
-        0.4664219915866852,
-        0.9931970238685608
-      ],
-      "min": [
-        0.0026373600121587515,
-        0.005426240153610706
-      ],
-      "type": "VEC2"
-    },
-    {
-      "bufferView": 0,
-      "componentType": 5125,
-      "count": 1392,
-      "type": "SCALAR"
-    },
-    {
-      "bufferView": 2,
-      "byteOffset": 8400,
-      "componentType": 5126,
-      "count": 198,
-      "max": [
-        0.9550049901008606,
-        0.6991549730300903,
-        0.014530399814248085
-      ],
-      "min": [
-        -0.9549480080604553,
-        -0.7829329967498779,
-        -0.014530399814248085
-      ],
-      "type": "VEC3"
-    },
-    {
-      "bufferView": 2,
-      "byteOffset": 10776,
-      "componentType": 5126,
-      "count": 198,
-      "max": [
-        0.0,
         1.0,
         1.0
       ],
       "min": [
-        0.0,
+        -1.0,
         -1.0,
         -1.0
       ],
       "type": "VEC3"
     },
     {
-      "bufferView": 3,
-      "byteOffset": 5600,
-      "componentType": 5126,
-      "count": 198,
-      "max": [
-        -0.025136800482869148,
-        0.9996839761734009,
-        0.9996839761734009,
-        1.0
-      ],
-      "min": [
-        -0.025192100554704666,
-        -0.9996830224990845,
-        -0.9996830224990845,
-        1.0
-      ],
-      "type": "VEC4"
-    },
-    {
       "bufferView": 1,
-      "byteOffset": 2800,
       "componentType": 5126,
-      "count": 198,
+      "count": 356,
       "max": [
-        0.9842180013656616,
-        0.9859330058097839
+        0.9489380121231079,
+        0.7680889964103699
       ],
       "min": [
-        0.4867280125617981,
-        0.023739099502563477
+        0.9463980197906494,
+        0.7376099824905396
       ],
       "type": "VEC2"
     },
     {
       "bufferView": 0,
-      "byteOffset": 5568,
       "componentType": 5125,
-      "count": 528,
+      "count": 492,
       "type": "SCALAR"
     }
   ],
   "asset": {
     "extras": {
-      "author": "paethon (https://sketchfab.com/paethon)",
+      "author": "Phil_XG (https://sketchfab.com/phil_xg)",
       "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
-      "source": "https://sketchfab.com/3d-models/bar-fence-a5863714fcbe4343842d76c2bba21f62",
-      "title": "Bar Fence"
+      "source": "https://sketchfab.com/3d-models/medieval-labyrinth-portcullis-35d7115d4f804160945f02129f2b2f93",
+      "title": "Medieval Labyrinth - Portcullis"
     },
-    "generator": "Sketchfab-12.66.0",
+    "generator": "Sketchfab-12.67.0",
     "version": "2.0"
   },
   "bufferViews": [
     {
       "buffer": 0,
-      "byteLength": 7680,
+      "byteLength": 1968,
       "name": "floatBufferViews",
       "target": 34963
     },
     {
       "buffer": 0,
-      "byteLength": 4384,
-      "byteOffset": 7680,
+      "byteLength": 2848,
+      "byteOffset": 1968,
       "byteStride": 8,
       "name": "floatBufferViews",
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteLength": 13152,
-      "byteOffset": 12064,
+      "byteLength": 8544,
+      "byteOffset": 4816,
       "byteStride": 12,
-      "name": "floatBufferViews",
-      "target": 34962
-    },
-    {
-      "buffer": 0,
-      "byteLength": 8768,
-      "byteOffset": 25216,
-      "byteStride": 16,
       "name": "floatBufferViews",
       "target": 34962
     }
   ],
   "buffers": [
     {
-      "byteLength": 33984,
+      "byteLength": 13360,
       "uri": "scene.bin"
     }
   ],
   "images": [
     {
-      "uri": "textures/DefaultMaterial_baseColor.jpeg"
+      "uri": "textures/Palette_baseColor.png"
     },
     {
-      "uri": "textures/DefaultMaterial_metallicRoughness.png"
-    },
-    {
-      "uri": "textures/DefaultMaterial_normal.jpeg"
+      "uri": "textures/Palette_metallicRoughness.png"
     }
   ],
   "materials": [
     {
-      "name": "DefaultMaterial",
-      "normalTexture": {
-        "index": 2
-      },
-      "occlusionTexture": {
-        "index": 1
-      },
+      "doubleSided": true,
+      "name": "Palette",
       "pbrMetallicRoughness": {
         "baseColorTexture": {
           "index": 0
@@ -227,32 +118,15 @@
   ],
   "meshes": [
     {
-      "name": "defaultMaterial",
+      "name": "Object_0",
       "primitives": [
         {
           "attributes": {
             "NORMAL": 1,
             "POSITION": 0,
-            "TANGENT": 2,
-            "TEXCOORD_0": 3
+            "TEXCOORD_0": 2
           },
-          "indices": 4,
-          "material": 0,
-          "mode": 4
-        }
-      ]
-    },
-    {
-      "name": "defaultMaterial",
-      "primitives": [
-        {
-          "attributes": {
-            "NORMAL": 6,
-            "POSITION": 5,
-            "TANGENT": 7,
-            "TEXCOORD_0": 8
-          },
-          "indices": 9,
+          "indices": 3,
           "material": 0,
           "mode": 4
         }
@@ -286,48 +160,13 @@
     },
     {
       "children": [
-        2,
-        4
+        2
       ],
-      "matrix": [
-        1.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        -4.371139006309477e-08,
-        0.999999999999999,
-        0.0,
-        0.0,
-        -0.999999999999999,
-        -4.371139006309477e-08,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        1.0
-      ],
-      "name": "Collada visual scene group"
-    },
-    {
-      "children": [
-        3
-      ],
-      "name": "post_lo"
+      "name": "Portcullis.obj.cleaner.materialmerger.gles"
     },
     {
       "mesh": 0,
-      "name": "defaultMaterial"
-    },
-    {
-      "children": [
-        5
-      ],
-      "name": "bar_lo"
-    },
-    {
-      "mesh": 1,
-      "name": "defaultMaterial"
+      "name": "Object_2"
     }
   ],
   "samplers": [
@@ -355,10 +194,6 @@
     {
       "sampler": 0,
       "source": 1
-    },
-    {
-      "sampler": 0,
-      "source": 2
     }
   ]
 }

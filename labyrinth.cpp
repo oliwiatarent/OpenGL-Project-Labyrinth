@@ -149,11 +149,12 @@ void Labyrinth::print() {
 }
 
 void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float wallHeight, float wallWidth, unsigned short liczba_pochodni){
-        ofstream sciany, podlogi, rampy, dachy, pochodnie;
+        ofstream sciany, podlogi, rampy, dachy, pochodnie, kraty;
         sciany.open("input/labyrinth_" + to_string(labyrinthNumber) + ".txt");
         podlogi.open("input/floors_" + to_string(labyrinthNumber) + ".txt");
         rampy.open("input/rampy_" + to_string(labyrinthNumber) + ".txt");
         pochodnie.open("input/pochodnie_"+to_string(labyrinthNumber)+".txt");
+        kraty.open("input/kraty_"+to_string(labyrinthNumber)+".txt");
 
         float floorThickness = 2.0f;
         int stairsRoomLength = 4, stairsRoomWidth = 2;
@@ -387,11 +388,25 @@ void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float
                 //printf("f2 %hd %hd\n", x, y);
             }
         }
+
+
+        for(int i = 0; i < 10;) {
+            int x = rand() % (szerokosc-1), y = rand() % (wysokosc-1);
+
+            if(!sciana[x][y][1] && sciana[x][y][2] && sciana[x][y][0] && !sciana[x][y][3]){
+                i++;
+                kraty << (szerokosc - x - 1) * (wallWidth) + (wallWidth / 2) << " " << (labyrinthNumber * wallHeight) + (wallHeight / 2) + (floorThickness * labyrinthNumber) << " " <<  y * (wallWidth) + (wallWidth / 2) + (wallLength / 2) << " " << 0 << endl;
+            } else if (sciana[x][y][1] && !sciana[x][y][2] && !sciana[x][y][0] && sciana[x][y][3]) {
+                i++;
+                kraty << (szerokosc - x - 1) * (wallWidth) + (wallWidth / 2) + (wallLength / 2) << " " << (labyrinthNumber * wallHeight) + (wallHeight / 2) + (floorThickness * labyrinthNumber) << " " <<  y * (wallWidth) + (wallWidth / 2) + (wallLength / 2) << " " << 1 << endl;
+            }
+        }
         
         sciany.close();
         podlogi.close();
         rampy.close();
         pochodnie.close();
+        kraty.close();
 }
 
 

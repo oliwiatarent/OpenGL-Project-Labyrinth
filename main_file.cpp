@@ -32,6 +32,11 @@ struct Torch{
         char facing = 0; //{0=X+}{1=X-}{2=Z+}{3=Z-}
 };
 
+struct Fence {
+        glm::vec3 position;
+        bool rotate = 0;
+};
+
 using namespace std;
 
 float zNear = 0.01; // bliższa odległość odcinania
@@ -46,9 +51,10 @@ float aspectRatio = 1.0;
 bool cursor_centred = true;
 bool gravity_on = false;
 
-int numberOfFloors = 3;
+int numberOfFloors = 4;
 float wallHeight = 9.0f;
 std::vector<std::vector<struct Torch>> torches;
+std::vector<struct Fence> fences;
 std::vector<GLuint> TEXTURES;
 std::vector<Wall_rect> obstacles_rect;
 std::vector<Wall_trian> obstacles_tr;
@@ -84,6 +90,22 @@ void draw_torch(struct Torch torch, ShaderProgram* s_p){
         glUniformMatrix4fv(s_p->u("M"), 1, false, glm::value_ptr(M));
         Models::torch.Draw(*s_p); //Narysowanie obiektu
 }
+
+void draw_fence(Fence fence) {
+        glm::vec3 scaleFactor = glm::vec3(6.0f, 8.0f, 0.5f) / glm::vec3(3.0f, 4.013751983642578f, 0.25f);
+        glm::mat4 M = glm::mat4(1.0f);
+        M = glm::translate(M, fence.position);
+        if (!fence.rotate)
+                M = glm::rotate(M, -PI/2, glm::vec3(1.0f, 0.0f, 0.0f));
+        else {
+                M = glm::rotate(M, -PI/2, glm::vec3(1.0f, 0.0f, 0.0f));
+                M = glm::rotate(M, PI/2, glm::vec3(0.0f, 0.0f, 1.0f));
+        }
+        M = glm::scale(M, scaleFactor);
+        glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(M));
+        Models::fence.Draw(*spLambert);
+}
+
 bool porownaj_odleglosci(glm::vec3 p1, glm::vec3 p2){
         glm::vec3 pozycjaObs = obserwator.getPosition();
         return pow(pozycjaObs.x - p1.x, 2) + pow(pozycjaObs.z - p1.z, 2) < pow(pozycjaObs.x - p2.x, 2) + pow(pozycjaObs.z - p2.z, 2);
@@ -418,6 +440,7 @@ void prepareScene(){
                 ifstream podlogi("input/floors_" + to_string(i) + ".txt");
                 ifstream rampy("input/rampy_" + to_string(i) + ".txt");
                 ifstream pochodnie("input/pochodnie_"+ to_string(i) + ".txt");
+                ifstream kraty("input/kraty_"+ to_string(i) + ".txt");
                 string line;
 
                 while (getline(sciany, line)) {
@@ -486,10 +509,24 @@ void prepareScene(){
                         }
                 }
 
+                while (getline(kraty, line)) {
+                        istringstream iss(line);
+                        float x, y, z;
+                        bool rotate;
+
+                        if (iss >> x >> y >> z >> rotate) {
+                                Fence tmp;
+                                tmp.position = glm::vec3(x, y, z);
+                                tmp.rotate = rotate;
+                                fences.push_back(tmp);
+                        }
+                }
+
                 sciany.close();
                 podlogi.close();
                 rampy.close();
                 pochodnie.close();
+                kraty.close();
         }
 
         for(unsigned int i=0;i<obstacles_rect.size();i++) OBSTACLES.push_back(&obstacles_rect[i]);
@@ -520,6 +557,10 @@ void drawScene(GLFWwindow* window, float dt){
                draw_torch(torches[current_floor][i], observers_light);
         }
 
+        for (int i = 0; i < fences.size(); i++) {
+                draw_fence(fences[i]);
+        }
+
         glUniform4f(observers_light->u("camera_position"), obserwator.getCameraPosition().x, obserwator.getCameraPosition().y, obserwator.getCameraPosition().z, 0.0);
         for(unsigned short i=0;i<maxActive_lights;i++){
                 char var_name[] = "torches[X]";
@@ -531,6 +572,9 @@ void drawScene(GLFWwindow* window, float dt){
                 OBSTACLES[i]->draw(P, V, observers_light);
         }
         if(wall_creator.is_creating_wall) wall_creator.current_wall->draw(P, V, spLambertSun);
+
+        
+
         glfwSwapBuffers(window); //Skopiuj bufor tylny do bufora przedniego
 }
 
