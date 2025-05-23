@@ -602,7 +602,7 @@ void Wall_creator::changeAngle_vertical(float dx){
     set_current_wall();
 }
 
-void Wall_creator::finish_wall_creation(std::vector<Wall*>& obstacles){
+void Wall_creator::finish_wall_creation(std::vector<Obstacle*>& obstacles){
     is_creating_wall = false;
     if(current_wall_creation_type==0){
         walls_rect[walls_rect_ptr++] = current_wall_rect;
@@ -618,6 +618,179 @@ void Wall_creator::finish_wall_creation(std::vector<Wall*>& obstacles){
 void Wall_creator::abort_wall_creation(){
     is_creating_wall = false;
     setArguments(glm::vec3(0.0, 0.0, 0.0), 1.0, 1.0, 1.0, 0.78, 0.0, 0.0);
+}
+
+// Obstacle_rect-------------------------------------------------------------------------------------------
+
+bool Obstacle_rect::rayIntersectsAABB(const glm::vec3& rayOrigin, const glm::vec3& rayDir, const glm::vec3& boxMin, const glm::vec3& boxMax, float& t) {
+    float tmin = (boxMin.x - rayOrigin.x) / rayDir.x;
+    float tmax = (boxMax.x - rayOrigin.x) / rayDir.x;
+    if (tmin > tmax) std::swap(tmin, tmax);
+
+    float tymin = (boxMin.y - rayOrigin.y) / rayDir.y;
+    float tymax = (boxMax.y - rayOrigin.y) / rayDir.y;
+    if (tymin > tymax) std::swap(tymin, tymax);
+
+    if ((tmin > tymax) || (tymin > tmax)) return false;
+    if (tymin > tmin) tmin = tymin;
+    if (tymax < tmax) tmax = tymax;
+
+    float tzmin = (boxMin.z - rayOrigin.z) / rayDir.z;
+    float tzmax = (boxMax.z - rayOrigin.z) / rayDir.z;
+    if (tzmin > tzmax) std::swap(tzmin, tzmax);
+
+    if ((tmin > tzmax) || (tzmin > tmax)) return false;
+    if (tzmin > tmin) tmin = tzmin;
+    if (tzmax < tmax) tmax = tzmax;
+
+    t = tmin;
+    return true;
+}
+
+Obstacle_rect::Obstacle_rect(){
+    DBL.x = 0.0;
+    DBL.y = 0.0;
+    DBL.z = 0.0;
+    l = 6.0;
+    w = 8.0;
+    h = 5.0;
+    angle_horizontal = 0.0;
+    angle_vertical = 0.0;
+}
+
+Obstacle_rect::Obstacle_rect(glm::vec3 position){
+    DBL = position;
+    l = 6.0;
+    w = 8.0;
+    h = 5.0;
+    angle_horizontal = 0.0;
+    angle_vertical = 0.0;
+}
+
+Obstacle_rect::Obstacle_rect(glm::vec3 position, glm::vec3 size){
+    DBL = position;
+    l = size.x;
+    h = size.y;
+    w = size.z;
+    angle_horizontal = 0.0;
+    angle_vertical = 0.0;   
+}
+
+void Obstacle_rect::setAngle_horizontal(float alpha){
+    angle_horizontal = alpha;
+}
+
+void Obstacle_rect::setAngle_vertical(float alpha){
+    angle_vertical = alpha;
+}
+
+void Obstacle_rect::draw(glm::mat4 P, glm::mat4 V, ShaderProgram* s_p){
+
+}
+
+bool Obstacle_rect::is_within(glm::vec3 punkt, float radius){
+    return false;
+}
+
+glm::vec3 Obstacle_rect::getSize(){
+    return glm::vec3(l, h, w);
+}
+
+glm::vec3 Obstacle_rect::getPosition(){
+    return DBL;
+}
+
+void Obstacle_rect::setModelMatrix(glm::mat4 matrix){
+    this->modelMatrix = matrix;
+}
+
+void Obstacle_rect::setIsSelected(bool is_selected){
+    this->is_selected = is_selected;
+}
+
+bool Obstacle_rect::is_clicked_on(const glm::vec3& rayOrigin, const glm::vec3& rayDir, float& t){
+    glm::vec3 halfSize = getSize() * 0.5f;
+    glm::vec3 boxMin = getPosition() - halfSize;
+    glm::vec3 boxMax = getPosition() + halfSize;
+}
+
+// FENCE --------------------------------------------------------------------------
+
+Fence::Fence(){
+    DBL = glm::vec3(0.0, 0.0, 0.0);
+    l = 6.0;
+    w = 8.0;
+    h = 5.0;
+    angle_horizontal = 0.0;
+    angle_vertical = 0.0;
+}
+
+Fence::Fence(glm::vec3 position){
+    DBL = position;
+    l = 6.0;
+    w = 8.0;
+    h = 5.0;
+    angle_horizontal = 0.0;
+    angle_vertical = 0.0;
+}
+
+Fence::Fence(glm::vec3 position, glm::vec3 size){
+    DBL = position;
+    l = size.x;
+    h = size.y;
+    w = size.z;
+    angle_horizontal = 0.0;
+    angle_vertical = 0.0;   
+}
+
+void Fence::setAngle_horizontal(float alpha){
+    angle_horizontal = alpha;
+}
+
+void Fence::setAngle_vertical(float alpha){
+    angle_vertical = alpha;
+}
+
+void Fence::draw(glm::mat4 P, glm::mat4 V, ShaderProgram* s_p){
+    glm::vec3 scaleFactor = glm::vec3(6.0f, 8.0f, 0.5f) / glm::vec3(3.0f, 4.013751983642578f, 0.25f);
+
+    glm::mat4 M = glm::mat4(1.0f);
+    M = glm::translate(M, getPosition());
+    M = glm::rotate(M, (float)(-PI/2), glm::vec3(1.0f, 0.0f, 0.0f));
+    M = glm::rotate(M, angle_horizontal, glm::vec3(0.0f, 0.0f, 1.0f));
+
+    if (is_selected) {
+        M = glm::rotate(M, (float)(PI/2), glm::vec3(0.0f, 0.0f, 1.0f));
+    }
+    
+    M = glm::scale(M, scaleFactor);
+    glUniformMatrix4fv(s_p->u("M"), 1, false, glm::value_ptr(M));
+    modelMatrix = M;
+    Models::fence.Draw(*s_p);
+}
+
+bool Fence::is_within(glm::vec3 punkt, float radius){
+    return false;
+}
+
+glm::vec3 Fence::getSize(){
+    return glm::vec3(l, h, w);
+}
+
+glm::vec3 Fence::getPosition(){
+    return DBL;
+}
+
+void Fence::setModelMatrix(glm::mat4 matrix){
+    this->modelMatrix = matrix;
+}
+
+void Fence::setIsSelected(bool is_selected){
+    this->is_selected = is_selected;
+}
+
+bool Fence::is_clicked_on(const glm::vec3& rayOrigin, const glm::vec3& rayDir, float& t){
+
 }
 
 #undef PI

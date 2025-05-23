@@ -10,16 +10,27 @@
 #include <stdio.h>
 #include "shaders/shaderprogram.h"
 #include <vector>
+#include "models/allmodels.h"
+#include "externalmodel.h"
 
-class Wall{ // abstrakcyjna klasa do tworzenia graniastosłupów o różnych podstawach, równi pochyłych, itp.
+class Obstacle{
     protected:
         glm::vec3 DBL; // punkt dolny bliższy lewy
         float l; // długość boku pierwszego
         float w; // długość boku drugiego
         float h; // wysokość
-        float gamma; // kąt (w radianach) pomiędzy bokami l, w (używany tylko w trójkątnych bryłach)
         float angle_horizontal = 0; // kąt (w radianach), o jaki obrócona jest bryła wokół osi OY
         float angle_vertical = 0; // kąt (w radianach), o jaki obrócona jest bryła wokół osi OZ
+    public:
+        virtual void setAngle_horizontal(float alpha) = 0;
+        virtual void setAngle_vertical(float alpha) = 0;
+        virtual void draw(glm::mat4 P, glm::mat4 V, ShaderProgram* s_p) = 0; // metoda rysująca
+        virtual bool is_within(glm::vec3 punkt, float radius) = 0; // metoda sprawdzająca, czy jakikolwiek punkt w odległości 'radius' od 'punkt' znajduje się wewnątrz bryły
+};
+
+class Wall : public Obstacle{ // abstrakcyjna klasa do tworzenia graniastosłupów o różnych podstawach, równi pochyłych, itp.
+    protected:
+        float gamma; // kąt (w radianach) pomiędzy bokami l, w (używany tylko w trójkątnych bryłach)
 
         unsigned int VERTEX_COUNT; // liczba wierzchołków
         float *VERTICES; // tablica z wierzchołkami
@@ -32,13 +43,8 @@ class Wall{ // abstrakcyjna klasa do tworzenia graniastosłupów o różnych pod
         virtual void skaluj(float tab[], unsigned int start, unsigned int stop, unsigned int step, float mnoznik) = 0; // metoda do modyfikacji współrzędnych teksturowania, by były odpowiednio rozciągnięte na obiekcie
 
     public:
-        virtual void setAngle_horizontal(float alpha) = 0;
-        virtual void setAngle_vertical(float alpha) = 0;
         virtual void setTexture(GLuint texture_id) = 0;
-        virtual void draw(glm::mat4 P, glm::mat4 V, ShaderProgram* s_p) = 0; // metoda rysująca
         virtual char getType() = 0; // metoda służąca do identyfiakcji typu obiektu (przy posługiwaniu się wskaźnikiem)
-
-        virtual bool is_within(glm::vec3 punkt, float radius) = 0; // metoda sprawdzająca, czy jakikolwiek punkt w odległości 'radius' od 'punkt' znajduje się wewnątrz bryły
 };
 
 class Wall_rect : public Wall{
@@ -121,7 +127,7 @@ class Wall_creator{ // Klasa tworząca manualnie nowe obiekty typu Wall_rect ora
         void set_current_wall(); // metoda ustawiająca wskażnik current_wall na odpowiedni obiekt
     public:
         bool is_creating_wall = false; // flaga określająca, czy tworzony jest aktualnie jakiś obiekt 
-        Wall* current_wall; // wskaźnik na aktualnie tworzony obiekt
+        Obstacle* current_wall; // wskaźnik na aktualnie tworzony obiekt
         Wall_creator();
         void setArguments(glm::vec3 DBL, float length, float width, float height, float gamma, float angle_horizontal, float angle_vertical); // ustawia atrybuty aktualnie tworzonego obiektu
         void assign_next_texture(std::vector<GLuint>& textures); // przypisuje kolejną teksturę do muru. KONIECZNIE użyć w fazie inicjalizacji.
@@ -141,8 +147,57 @@ class Wall_creator{ // Klasa tworząca manualnie nowe obiekty typu Wall_rect ora
         void changeAngle_horizontal(float angle_horizontal);
         void changeAngle_vertical(float angle_vertical);
 
-        void finish_wall_creation(std::vector<Wall*>& obstacles); // kończy modyfikację obiektu i go zapamiętuje
+        void finish_wall_creation(std::vector<Obstacle*>& obstacles); // kończy modyfikację obiektu i go zapamiętuje
         void abort_wall_creation(); // kończy modyfikację obiektu bez zapisywania
+};
+
+class Obstacle_rect : public Obstacle{
+    protected:
+        glm::mat4 modelMatrix;
+        bool is_selected = false;
+
+        bool rayIntersectsAABB(const glm::vec3& rayOrigin, const glm::vec3& rayDir, const glm::vec3& boxMin, const glm::vec3& boxMax, float& t);
+
+    public:
+        Obstacle_rect();
+        Obstacle_rect(glm::vec3 position);
+        Obstacle_rect(glm::vec3 position, glm::vec3 size);
+        void setAngle_horizontal(float alpha);
+        void setAngle_vertical(float alpha);
+        void draw(glm::mat4 P, glm::mat4 V, ShaderProgram* s_p); // metoda rysująca
+        bool is_within(glm::vec3 punkt, float radius); // metoda sprawdzająca, czy jakikolwiek punkt w odległości 'radius' od 'punkt' znajduje się wewnątrz bryły
+
+        glm::vec3 getSize();
+        glm::vec3 getPosition();
+        void setModelMatrix(glm::mat4 matrix);
+        void setIsSelected(bool is_selected);
+        bool is_clicked_on(const glm::vec3& rayOrigin, const glm::vec3& rayDir, float& t);
+};
+
+class Fence : public Obstacle_rect{
+    protected:
+
+    public: 
+        Fence();
+        Fence(glm::vec3 position);
+        Fence(glm::vec3 position, glm::vec3 size);
+        void setAngle_horizontal(float alpha);
+        void setAngle_vertical(float alpha);
+        void draw(glm::mat4 P, glm::mat4 V, ShaderProgram* s_p); // metoda rysująca
+        bool is_within(glm::vec3 punkt, float radius); // metoda sprawdzająca, czy jakikolwiek punkt w odległości 'radius' od 'punkt' znajduje się wewnątrz bryły
+
+        glm::vec3 getSize();
+        glm::vec3 getPosition();
+        void setModelMatrix(glm::mat4 matrix);
+        void setIsSelected(bool is_selected);
+        bool is_clicked_on(const glm::vec3& rayOrigin, const glm::vec3& rayDir, float& t);
+};
+
+class Door : public Obstacle_rect{
+    protected:
+
+    public:
+        
 };
 
 #endif

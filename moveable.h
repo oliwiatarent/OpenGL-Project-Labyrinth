@@ -23,9 +23,9 @@ class Moveable{
         bool in_air = true; // określa, czy obiekt znajduje się w powietrzu
         bool can_jump = true; // określa, czy obiekt może skakać
 
-        void move_along_obstacle(float T, std::vector<Wall*>& obstacles); // usprawnia ruch, gdy obiekt znajduje się obok przeszkody
-        bool move_along_obstacle_util(float T, std::vector<Wall*>& obstacles);
-        bool can_fall_down(float T, std::vector<Wall*>& obstacles);
+        void move_along_obstacle(float T, std::vector<Obstacle*>& obstacles); // usprawnia ruch, gdy obiekt znajduje się obok przeszkody
+        bool move_along_obstacle_util(float T, std::vector<Obstacle*>& obstacles);
+        bool can_fall_down(float T, std::vector<Obstacle*>& obstacles);
 
     public:
         Moveable();
@@ -61,8 +61,8 @@ class Moveable{
         void fly_up(); // ustawia składową y wektora prędkości
         void fly_down(); // ustawia składową y wektora prędkości
 
-        bool move(float T, std::vector<Wall*>& obstacles); // przemieszcza obiekt zgodnie z wektorem i wartością predkości
-        void fall(float T, std::vector<Wall*>& obstacles); // przemieszcza obiekt w dół, symulując spadanie
+        bool move(float T, std::vector<Obstacle*>& obstacles); // przemieszcza obiekt zgodnie z wektorem i wartością predkości
+        void fall(float T, std::vector<Obstacle*>& obstacles); // przemieszcza obiekt w dół, symulując spadanie
         void jump(); // nadaje obiektowi prędkość wzdłuż osi OY
 };
 

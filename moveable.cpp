@@ -5,7 +5,7 @@
 #define climbing_samples 5
 
 // MOVEABLE -------------------------------------------------------------------------------------------------------------
-void Moveable::move_along_obstacle(float T, std::vector<Wall*>& obstacles){
+void Moveable::move_along_obstacle(float T, std::vector<Obstacle*>& obstacles){
     glm::vec3 original_velocity = velocity;
     velocity.x = (original_velocity.x + original_velocity.z)*(sqrt(2)/2);
     velocity.z = (original_velocity.z - original_velocity.x)*(sqrt(2)/2);
@@ -17,7 +17,7 @@ void Moveable::move_along_obstacle(float T, std::vector<Wall*>& obstacles){
     }
 }
 
-bool Moveable::move_along_obstacle_util(float T, std::vector<Wall*>& obstacles){
+bool Moveable::move_along_obstacle_util(float T, std::vector<Obstacle*>& obstacles){
     glm::vec3 new_position_down = position + velocity * T;
     glm::vec3 new_position_up = new_position_down;
     new_position_up.y += height;
@@ -38,7 +38,7 @@ bool Moveable::move_along_obstacle_util(float T, std::vector<Wall*>& obstacles){
     return new_position_valid;
 }
 
-bool Moveable::can_fall_down(float T, std::vector<Wall*>& obstacles){
+bool Moveable::can_fall_down(float T, std::vector<Obstacle*>& obstacles){
     glm::vec3 v(0.0, velocity.y, 0.0);
     glm::vec3 new_position_down = position + v * T;
     bool result = true;
@@ -196,7 +196,7 @@ void Moveable::fly_down(){
     setVelocity(v);
 }
 
-bool Moveable::move(float T, std::vector<Wall*>& obstacles){
+bool Moveable::move(float T, std::vector<Obstacle*>& obstacles){
     if(!can_fall_down(T, obstacles)) velocity.y = 0.0;
     glm::vec3 new_position_down = position + velocity * T;
     glm::vec3 new_position_up = new_position_down;
@@ -238,7 +238,7 @@ bool Moveable::move(float T, std::vector<Wall*>& obstacles){
     return new_position_valid;
 }
 
-void Moveable::fall(float T, std::vector<Wall*>& obstacles){
+void Moveable::fall(float T, std::vector<Obstacle*>& obstacles){
     velocity.y -= std_grav*T;
 }
 
