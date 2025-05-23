@@ -149,12 +149,13 @@ void Labyrinth::print() {
 }
 
 void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float wallHeight, float wallWidth, unsigned short liczba_pochodni){
-        ofstream sciany, podlogi, rampy, dachy, pochodnie, kraty;
+        ofstream sciany, podlogi, rampy, dachy, pochodnie, kraty, duchy;
         sciany.open("input/labyrinth_" + to_string(labyrinthNumber) + ".txt");
         podlogi.open("input/floors_" + to_string(labyrinthNumber) + ".txt");
         rampy.open("input/rampy_" + to_string(labyrinthNumber) + ".txt");
         pochodnie.open("input/pochodnie_"+to_string(labyrinthNumber)+".txt");
         kraty.open("input/kraty_"+to_string(labyrinthNumber)+".txt");
+        duchy.open("input/duchy_" + to_string(labyrinthNumber) + ".txt");
 
         float floorThickness = 2.0f;
         int stairsRoomLength = 4, stairsRoomWidth = 2;
@@ -365,6 +366,7 @@ void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float
                         sciany << (k * (wallLength + wallWidth)) - wallLength - wallWidth<< " "  << labyrinthNumber * wallHeight+floorThickness*labyrinthNumber  << " "  << y * wallWidth + wallLength
                             << " " << wallLength << " " << wallHeight << " " << wallWidth - wallLength << " " << 0 << endl;
                 }
+
                 k++;
             }
 
@@ -403,12 +405,15 @@ void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float
                 krata[x][y] = true;
             }
         }
+
+        duchy << wallWidth / 2 + wallLength << " " << labyrinthNumber * (wallHeight + floorThickness) + (wallHeight / 2) << " " << wysokosc * wallWidth + wallLength << endl;
         
         sciany.close();
         podlogi.close();
         rampy.close();
         pochodnie.close();
         kraty.close();
+        duchy.close();
 }
 
 

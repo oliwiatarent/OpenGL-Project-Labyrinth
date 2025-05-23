@@ -59,6 +59,7 @@ int numberOfFloors = 4;
 float wallHeight = 9.0f;
 std::vector<std::vector<struct Torch>> torches;
 std::vector<struct Fence> fences;
+std::vector<struct Ghost> ghosts;
 std::vector<GLuint> TEXTURES;
 std::vector<Wall_rect> obstacles_rect;
 std::vector<Wall_trian> obstacles_tr;
@@ -69,6 +70,19 @@ Observer obserwator;
 
 ShaderProgram* sp;
 ShaderProgram* observers_light;
+
+enum class MovePhase { Left, Up_Left, Up_Right, Right };
+MovePhase currentPhase = MovePhase::Left;
+float speed = 10.0f;
+float traveled = 0.0f;
+float totalTraveled = 0.0f;
+float wwidth, wlength, lheight, lwidth;
+
+struct Ghost {
+        glm::vec3 startingPosition;
+        glm::vec3 position;
+        MovePhase phase = MovePhase::Left;
+};
 
 void draw_torch(struct Torch torch, ShaderProgram* s_p){
         glm::mat4 M = glm::mat4(1.0f);
@@ -118,6 +132,85 @@ void draw_fence(Fence fence) {
         Models::fence.Draw(*spLambert);
 }
 
+void draw_ghost(Ghost ghost) {
+        glm::mat4 M = glm::mat4(1.0f);
+        M = glm::translate(M, ghost.position);
+
+        M = glm::scale(M, glm::vec3(2.0f));
+
+        if (ghost.phase == MovePhase::Left)
+                M = glm::rotate(M, PI, glm::vec3(0.0f, 1.0f, 0.0f));
+        else if (ghost.phase == MovePhase::Up_Left || ghost.phase == MovePhase::Up_Right)     
+                M = glm::rotate(M, PI/2, glm::vec3(0.0f, 1.0f, 0.0f));
+
+        glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(M));
+
+        Models::ghost.Draw(*spLambert);
+}
+
+void move_ghost(float deltaTime) {
+        float movement = speed * deltaTime;
+
+        switch (currentPhase) {
+                case MovePhase::Left:
+                        for (int i = 0; i < ghosts.size(); i++) {
+                                ghosts[i].position += glm::vec3(0.0f, 0.0f, -movement); 
+                        }
+                        traveled += movement;
+                        if (traveled > (wwidth * lheight + 3)) {
+                                currentPhase = MovePhase::Up_Left;
+                                for (int i = 0; i < ghosts.size(); i++) ghosts[i].phase = MovePhase::Up_Left;
+                                traveled = 0;
+                        }
+                        break;
+                case MovePhase::Up_Left:
+                        for (int i = 0; i < ghosts.size(); i++) {
+                                ghosts[i].position += glm::vec3(movement, 0.0f, 0.0f); 
+                        }
+                        traveled += movement;
+                        totalTraveled += movement;
+                        if (traveled > wwidth) {
+                                currentPhase = MovePhase::Right;
+                                for (int i = 0; i < ghosts.size(); i++) ghosts[i].phase = MovePhase::Right;
+                                traveled = 0;
+                        }
+                        break;
+                case MovePhase::Right:
+                        for (int i = 0; i < ghosts.size(); i++) {
+                                ghosts[i].position += glm::vec3(0.0f, 0.0f, movement); 
+                        }
+                        traveled += movement;
+                        if (traveled > wwidth * lheight + 3) {
+                                currentPhase = MovePhase::Up_Right;
+                                for (int i = 0; i < ghosts.size(); i++) ghosts[i].phase = MovePhase::Up_Right;
+                                traveled = 0;
+                        }
+                        break;
+                case MovePhase::Up_Right:
+                        for (int i = 0; i < ghosts.size(); i++) {
+                                ghosts[i].position += glm::vec3(movement, 0.0f, 0.0f);
+                        }
+                        traveled += movement;
+                        totalTraveled += movement;
+                        if (traveled > wwidth) {
+                                currentPhase = MovePhase::Left;
+                                for (int i = 0; i < ghosts.size(); i++) ghosts[i].phase = MovePhase::Left;
+                                traveled = 0;
+                        }
+                        break;
+        }
+
+        if (totalTraveled > wwidth * lwidth) {
+                for (int i = 0; i < ghosts.size(); i++) {
+                        ghosts[i].position = ghosts[i].startingPosition;
+                        ghosts[i].phase = MovePhase::Left;
+                        currentPhase = MovePhase::Left;
+                } 
+                totalTraveled = 0.0f;
+                traveled = 0;
+        }
+}
+
 bool porownaj_odleglosci(glm::vec3 p1, glm::vec3 p2){
         glm::vec3 pozycjaObs = obserwator.getPosition();
         return pow(pozycjaObs.x - p1.x, 2) + pow(pozycjaObs.z - p1.z, 2) < pow(pozycjaObs.x - p2.x, 2) + pow(pozycjaObs.z - p2.z, 2);
@@ -137,28 +230,28 @@ float randFloat(){
 }
 
 bool rayIntersectsAABB(const glm::vec3& rayOrigin, const glm::vec3& rayDir, const glm::vec3& boxMin, const glm::vec3& boxMax, float& t) {
-    float tmin = (boxMin.x - rayOrigin.x) / rayDir.x;
-    float tmax = (boxMax.x - rayOrigin.x) / rayDir.x;
-    if (tmin > tmax) std::swap(tmin, tmax);
+        float tmin = (boxMin.x - rayOrigin.x) / rayDir.x;
+        float tmax = (boxMax.x - rayOrigin.x) / rayDir.x;
+        if (tmin > tmax) std::swap(tmin, tmax);
 
-    float tymin = (boxMin.y - rayOrigin.y) / rayDir.y;
-    float tymax = (boxMax.y - rayOrigin.y) / rayDir.y;
-    if (tymin > tymax) std::swap(tymin, tymax);
+        float tymin = (boxMin.y - rayOrigin.y) / rayDir.y;
+        float tymax = (boxMax.y - rayOrigin.y) / rayDir.y;
+        if (tymin > tymax) std::swap(tymin, tymax);
 
-    if ((tmin > tymax) || (tymin > tmax)) return false;
-    if (tymin > tmin) tmin = tymin;
-    if (tymax < tmax) tmax = tymax;
+        if ((tmin > tymax) || (tymin > tmax)) return false;
+        if (tymin > tmin) tmin = tymin;
+        if (tymax < tmax) tmax = tymax;
 
-    float tzmin = (boxMin.z - rayOrigin.z) / rayDir.z;
-    float tzmax = (boxMax.z - rayOrigin.z) / rayDir.z;
-    if (tzmin > tzmax) std::swap(tzmin, tzmax);
+        float tzmin = (boxMin.z - rayOrigin.z) / rayDir.z;
+        float tzmax = (boxMax.z - rayOrigin.z) / rayDir.z;
+        if (tzmin > tzmax) std::swap(tzmin, tzmax);
 
-    if ((tmin > tzmax) || (tzmin > tmax)) return false;
-    if (tzmin > tmin) tmin = tzmin;
-    if (tzmax < tmax) tmax = tzmax;
+        if ((tmin > tzmax) || (tzmin > tmax)) return false;
+        if (tzmin > tmin) tmin = tzmin;
+        if (tzmax < tmax) tmax = tzmax;
 
-    t = tmin;
-    return true;
+        t = tmin;
+        return true;
 }
 
 void error_callback(int error, const char* description) {
@@ -491,13 +584,15 @@ void prepareMoveables(){
 }
 void prepareScene(){
         torches.resize(numberOfFloors);
-        int labyrinthHeight = 10, labirynthWidth = 10;
+        int labyrinthHeight = 10, labyrinthWidth = 10;
         float wallLength = 1.0f, wallWidth = 7.0f;
+
+        wlength = wallLength; wwidth = wallWidth; lheight = labyrinthHeight; lwidth = labyrinthWidth;
         
         for (int i = 0; i < numberOfFloors; i++) {
                 srand(std::chrono::high_resolution_clock::now().time_since_epoch().count() + i * 1337);
 
-                Labyrinth labyrinth = Labyrinth(labyrinthHeight, labirynthWidth);
+                Labyrinth labyrinth = Labyrinth(labyrinthHeight, labyrinthWidth);
                 labyrinth.print();
                 labyrinth.generateCoordinates(i, wallLength, wallHeight, wallWidth, maxTorchesPerFloor);
 
@@ -506,6 +601,7 @@ void prepareScene(){
                 ifstream rampy("input/rampy_" + to_string(i) + ".txt");
                 ifstream pochodnie("input/pochodnie_"+ to_string(i) + ".txt");
                 ifstream kraty("input/kraty_"+ to_string(i) + ".txt");
+                ifstream duchy("input/duchy_"+ to_string(i) + ".txt");
                 string line;
 
                 while (getline(sciany, line)) {
@@ -587,11 +683,25 @@ void prepareScene(){
                         }
                 }
 
+                while (getline(duchy, line)) {
+                        istringstream iss(line);
+                        float x, y, z;
+
+                        if (iss >> x >> y >> z) {
+                                Ghost ghost;
+                                ghost.position = glm::vec3(x, y, z);
+                                ghost.startingPosition = glm::vec3(x, y, z);
+                                ghosts.push_back(ghost);
+                        }
+                }
+                
+
                 sciany.close();
                 podlogi.close();
                 rampy.close();
                 pochodnie.close();
                 kraty.close();
+                duchy.close();
         }
 
         for(unsigned int i=0;i<obstacles_rect.size();i++) OBSTACLES.push_back(&obstacles_rect[i]);
@@ -624,6 +734,10 @@ void drawScene(GLFWwindow* window, float dt){
 
         for (int i = 0; i < fences.size(); i++) {
                 draw_fence(fences[i]);
+        }
+
+        for (int i = 0; i < ghosts.size(); i++) {
+                draw_ghost(ghosts[i]);
         }
 
         glUniform4f(observers_light->u("camera_position"), obserwator.getCameraPosition().x, obserwator.getCameraPosition().y, obserwator.getCameraPosition().z, 0.0);
@@ -686,6 +800,8 @@ int main(void){
                 drawScene(window, dt); //Wykonaj procedurę rysującą
                 glfwPollEvents(); //Wykonaj procedury callback w zalezności od zdarzeń jakie zaszły.
                 if(cursor_centred) printf("pos= %f %f %f\n", obserwator.getPosition().x, obserwator.getPosition().y, obserwator.getPosition().z);
+
+                move_ghost(dt);
 
                 if(gravity_on) obserwator.fall(dt, OBSTACLES);
                 obserwator.move(dt, OBSTACLES);
