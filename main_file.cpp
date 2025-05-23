@@ -51,6 +51,7 @@ float coef = 1.0;
 
 int numberOfFloors = 4;
 float wallHeight = 9.0f;
+float floorThickness = 2.0;
 std::vector<std::vector<struct Torch>> torches;
 std::vector<Fence> fences;
 std::vector<GLuint> TEXTURES;
@@ -101,35 +102,6 @@ float clamp(float value, float min, float max){
         if(result > max) result = max;
         else if(result < min) result = min;
         return result;
-}
-float randFloat(){
-        float result = rand() % 1000;
-        return (float) result / 1000;
-}
-
-bool rayIntersectsAABB(const glm::vec3& rayOrigin, const glm::vec3& rayDir, const glm::vec3& boxMin, const glm::vec3& boxMax, float& t) {
-    float tmin = (boxMin.x - rayOrigin.x) / rayDir.x;
-    float tmax = (boxMax.x - rayOrigin.x) / rayDir.x;
-    if (tmin > tmax) std::swap(tmin, tmax);
-
-    float tymin = (boxMin.y - rayOrigin.y) / rayDir.y;
-    float tymax = (boxMax.y - rayOrigin.y) / rayDir.y;
-    if (tymin > tymax) std::swap(tymin, tymax);
-
-    if ((tmin > tymax) || (tymin > tmax)) return false;
-    if (tymin > tmin) tmin = tymin;
-    if (tymax < tmax) tmax = tymax;
-
-    float tzmin = (boxMin.z - rayOrigin.z) / rayDir.z;
-    float tzmax = (boxMax.z - rayOrigin.z) / rayDir.z;
-    if (tzmin > tzmax) std::swap(tzmin, tzmax);
-
-    if ((tmin > tzmax) || (tzmin > tmax)) return false;
-    if (tzmin > tmin) tmin = tzmin;
-    if (tzmax < tmax) tmax = tzmax;
-
-    t = tmin;
-    return true;
 }
 
 void error_callback(int error, const char* description) {
@@ -376,28 +348,23 @@ void cursor_position_callback(GLFWwindow* window, double xpos, double ypos){
 }
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
         if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-                glm::vec3 ray = obserwator.getCameraViewVector();
-                glm::vec3 origin = obserwator.getCameraPosition();
-
                 int selectedIndex = -1;
                 float closestT = 1e9;
 
                 for (int i = 0; i < fences.size(); ++i) {
-                        glm::vec3 halfSize = fences[i].getSize() * 0.5f;
-                        glm::vec3 boxMin = fences[i].getPosition() - halfSize;
-                        glm::vec3 boxMax = fences[i].getPosition() + halfSize;
-
                         float t;
-                        if (rayIntersectsAABB(origin, ray, boxMin, boxMax, t)) {
+                        if (fences[i].is_clicked_on(obserwator.getCameraPosition(), obserwator.getCameraViewVector(), t)) {
                                 if (t < closestT && t < zasieg_reki) {
                                         closestT = t;
                                         selectedIndex = i;
                                 }
                         }
                 }
-
                 // Wyznacz najbliższy
-                if(selectedIndex!=-1) fences[selectedIndex].setIsSelected(true);
+                if(selectedIndex!=-1){
+                        fences[selectedIndex].setIsSelected(true);
+                        fences[selectedIndex].change_height(floorThickness+wallHeight);
+                } 
         }
 }
 GLuint readTexture(const char* scianyname) {
@@ -473,7 +440,7 @@ void prepareScene(){
 
                 Labyrinth labyrinth = Labyrinth(labyrinthHeight, labirynthWidth);
                 labyrinth.print();
-                labyrinth.generateCoordinates(i, wallLength, wallHeight, wallWidth, maxTorchesPerFloor);
+                labyrinth.generateCoordinates(i, wallLength, wallHeight, wallWidth, floorThickness, maxTorchesPerFloor);
 
                 ifstream sciany("input/labyrinth_" + to_string(i) + ".txt");
                 ifstream podlogi("input/floors_" + to_string(i) + ".txt");
@@ -568,6 +535,8 @@ void prepareScene(){
                 kraty.close();
         }
 
+        fences.push_back(Fence(glm::vec3(-9.0, 4.0, 5.0)));
+
         for(unsigned int i=0;i<obstacles_rect.size();i++) OBSTACLES.push_back(&obstacles_rect[i]);
         for(unsigned int i=0;i<obstacles_tr.size();i++) OBSTACLES.push_back(&obstacles_tr[i]);
         for(unsigned int i=0;i<ramps.size();i++) OBSTACLES.push_back(&ramps[i]);
@@ -604,7 +573,7 @@ void drawScene(GLFWwindow* window, float dt){
         M = glm::translate(M, glm::vec3(2.0, 1.0, 2.0));
                 M = glm::rotate(M, PI/2, glm::vec3(0.0, 1.0, 0.0));
         M = glm::scale(M, glm::vec3(4.0/1.5, 4.0, 4.0/10.0)/(glm::vec3(-1744.371826171875, -181.78280639648438, 743.0694580078125) - glm::vec3(-1893.22802734375, -400.7828063964844, 738.0694580078125)));
-         M = glm::translate(M, glm::vec3(1893.22802734375, 400.7828063964844, -738.0694580078125));
+        M = glm::translate(M, glm::vec3(1893.22802734375, 400.7828063964844, -738.0694580078125));
         observers_light->use();
         glUniformMatrix4fv(observers_light->u("M"), 1, false, glm::value_ptr(M));
         glUniformMatrix4fv(observers_light->u("P"), 1, false, glm::value_ptr(P));
@@ -681,6 +650,8 @@ int main(void){
 
                 if(gravity_on) obserwator.fall(dt, OBSTACLES);
                 obserwator.move(dt, OBSTACLES);
+
+                for(unsigned short i=0;i<fences.size();i++) fences[i].move(dt);
         }
 
         freeOpenGLProgram(window);

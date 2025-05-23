@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include "shaders/shaderprogram.h"
 #include <vector>
+#include <thread>
 #include "models/allmodels.h"
 #include "externalmodel.h"
 
@@ -176,7 +177,9 @@ class Obstacle_rect : public Obstacle{
 
 class Fence : public Obstacle_rect{
     protected:
-
+        float final_height; // wysokość, na jaką podeniść ma się krata
+        static constexpr float velocity_value = 1.0; // szybkość podnoszenia się kraty
+        volatile bool is_moving = false;
     public: 
         Fence();
         Fence(glm::vec3 position);
@@ -191,6 +194,8 @@ class Fence : public Obstacle_rect{
         void setModelMatrix(glm::mat4 matrix);
         void setIsSelected(bool is_selected);
         bool is_clicked_on(const glm::vec3& rayOrigin, const glm::vec3& rayDir, float& t);
+        void change_height(float dh);
+        void move(float T);
 };
 
 class Door : public Obstacle_rect{

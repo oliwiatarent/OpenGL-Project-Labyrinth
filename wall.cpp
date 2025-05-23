@@ -688,8 +688,13 @@ void Obstacle_rect::draw(glm::mat4 P, glm::mat4 V, ShaderProgram* s_p){
 
 }
 
-bool Obstacle_rect::is_within(glm::vec3 punkt, float radius){
-    return false;
+bool Obstacle_rect::is_within(glm::vec3 punkt, float r){
+    glm::vec3 _punkt; // punkt w układzie współrzędnych muru
+    glm::vec3 _DBL = DBL - getSize()/glm::vec3(2.0, 2.0, 2.0);
+    _punkt.z = -(punkt.x - _DBL.x)*sin(angle_horizontal) + (punkt.z - _DBL.z)*cos(angle_horizontal);
+    _punkt.y = -(punkt.x - _DBL.x)*cos(angle_horizontal)*sin(angle_vertical) + (punkt.y - _DBL.y)*cos(angle_vertical) - (punkt.z - _DBL.z)*sin(angle_horizontal)*sin(angle_vertical);
+    _punkt.x = (punkt.x - _DBL.x)*cos(angle_horizontal)*cos(angle_vertical) + (punkt.y - _DBL.y)*sin(angle_vertical) + (punkt.z - _DBL.z)*sin(angle_horizontal)*cos(angle_vertical);
+    return _punkt.x + r > l*0.25 && _punkt.z + r > 0 && _punkt.y+r > 0 && _punkt.x-r < l*0.75 && _punkt.z-r < w && _punkt.y-r < h;
 }
 
 glm::vec3 Obstacle_rect::getSize(){
@@ -712,6 +717,7 @@ bool Obstacle_rect::is_clicked_on(const glm::vec3& rayOrigin, const glm::vec3& r
     glm::vec3 halfSize = getSize() * 0.5f;
     glm::vec3 boxMin = getPosition() - halfSize;
     glm::vec3 boxMax = getPosition() + halfSize;
+    return rayIntersectsAABB(rayOrigin, rayDir, boxMin, boxMax, t);
 }
 
 // FENCE --------------------------------------------------------------------------
@@ -720,18 +726,20 @@ Fence::Fence(){
     DBL = glm::vec3(0.0, 0.0, 0.0);
     l = 6.0;
     w = 8.0;
-    h = 5.0;
+    h = 9.0;
     angle_horizontal = 0.0;
     angle_vertical = 0.0;
+    final_height = DBL.y;
 }
 
 Fence::Fence(glm::vec3 position){
     DBL = position;
     l = 6.0;
     w = 8.0;
-    h = 5.0;
+    h = 9.0;
     angle_horizontal = 0.0;
     angle_vertical = 0.0;
+    final_height = position.y;
 }
 
 Fence::Fence(glm::vec3 position, glm::vec3 size){
@@ -741,6 +749,7 @@ Fence::Fence(glm::vec3 position, glm::vec3 size){
     w = size.z;
     angle_horizontal = 0.0;
     angle_vertical = 0.0;   
+    final_height = position.y;
 }
 
 void Fence::setAngle_horizontal(float alpha){
@@ -758,11 +767,6 @@ void Fence::draw(glm::mat4 P, glm::mat4 V, ShaderProgram* s_p){
     M = glm::translate(M, getPosition());
     M = glm::rotate(M, (float)(-PI/2), glm::vec3(1.0f, 0.0f, 0.0f));
     M = glm::rotate(M, angle_horizontal, glm::vec3(0.0f, 0.0f, 1.0f));
-
-    if (is_selected) {
-        M = glm::rotate(M, (float)(PI/2), glm::vec3(0.0f, 0.0f, 1.0f));
-    }
-    
     M = glm::scale(M, scaleFactor);
     glUniformMatrix4fv(s_p->u("M"), 1, false, glm::value_ptr(M));
     modelMatrix = M;
@@ -770,7 +774,7 @@ void Fence::draw(glm::mat4 P, glm::mat4 V, ShaderProgram* s_p){
 }
 
 bool Fence::is_within(glm::vec3 punkt, float radius){
-    return false;
+    return Obstacle_rect::is_within(punkt, radius);
 }
 
 glm::vec3 Fence::getSize(){
@@ -790,7 +794,24 @@ void Fence::setIsSelected(bool is_selected){
 }
 
 bool Fence::is_clicked_on(const glm::vec3& rayOrigin, const glm::vec3& rayDir, float& t){
+    return Obstacle_rect::is_clicked_on(rayOrigin, rayDir, t);
+}
 
+void Fence::change_height(float dh){
+    is_moving = true;
+    final_height += dh;
+}
+
+void Fence::move(float T){
+    if(is_moving){
+        float margin = 0.01;
+        if(final_height - margin < DBL.y && final_height + margin > DBL.y){
+            DBL.y = final_height;
+            is_moving = false;
+        }
+        if(final_height > DBL.y) DBL.y += velocity_value*T;
+        else if(final_height < DBL.y) DBL.y -= velocity_value*T;
+    }
 }
 
 #undef PI
