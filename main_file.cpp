@@ -66,6 +66,19 @@ Observer obserwator;
 ShaderProgram* sp;
 ShaderProgram* observers_light;
 
+enum class MovePhase { Left, Up_Left, Up_Right, Right };
+MovePhase currentPhase = MovePhase::Left;
+float speed = 10.0f;
+float traveled = 0.0f;
+float totalTraveled = 0.0f;
+float wwidth, wlength, lheight, lwidth;
+
+struct Ghost {
+        glm::vec3 startingPosition;
+        glm::vec3 position;
+        MovePhase phase = MovePhase::Left;
+};
+
 void draw_torch(struct Torch torch, ShaderProgram* s_p){
         glm::mat4 M = glm::mat4(1.0f);
         M = glm::translate(M, torch.position);
@@ -449,13 +462,15 @@ void prepareMoveables(){
 }
 void prepareScene(){
         torches.resize(numberOfFloors);
-        int labyrinthHeight = 10, labirynthWidth = 10;
+        int labyrinthHeight = 10, labyrinthWidth = 10;
         float wallLength = 1.0f, wallWidth = 7.0f;
+
+        wlength = wallLength; wwidth = wallWidth; lheight = labyrinthHeight; lwidth = labyrinthWidth;
         
         for (int i = 0; i < numberOfFloors; i++) {
                 srand(std::chrono::high_resolution_clock::now().time_since_epoch().count() + i * 1337);
 
-                Labyrinth labyrinth = Labyrinth(labyrinthHeight, labirynthWidth);
+                Labyrinth labyrinth = Labyrinth(labyrinthHeight, labyrinthWidth);
                 labyrinth.print();
                 labyrinth.generateCoordinates(i, wallLength, wallHeight, wallWidth, floorThickness, doorHeight/1.5, maxTorchesPerFloor);
 
@@ -464,6 +479,7 @@ void prepareScene(){
                 ifstream rampy("input/rampy_" + to_string(i) + ".txt");
                 ifstream pochodnie("input/pochodnie_"+ to_string(i) + ".txt");
                 ifstream kraty("input/kraty_"+ to_string(i) + ".txt");
+                ifstream duchy("input/duchy_"+ to_string(i) + ".txt");
                 string line;
 
                 while (getline(sciany, line)) {
@@ -551,11 +567,25 @@ void prepareScene(){
                         }
                 }
 
+                while (getline(duchy, line)) {
+                        istringstream iss(line);
+                        float x, y, z;
+
+                        if (iss >> x >> y >> z) {
+                                Ghost ghost;
+                                ghost.position = glm::vec3(x, y, z);
+                                ghost.startingPosition = glm::vec3(x, y, z);
+                                ghosts.push_back(ghost);
+                        }
+                }
+                
+
                 sciany.close();
                 podlogi.close();
                 rampy.close();
                 pochodnie.close();
                 kraty.close();
+                duchy.close();
         }
 
         doors.push_back(Door(glm::vec3(-14.0, 0.0, 7.0), 6.0));
@@ -644,6 +674,8 @@ int main(void){
                 drawScene(window, dt); //Wykonaj procedurę rysującą
                 glfwPollEvents(); //Wykonaj procedury callback w zalezności od zdarzeń jakie zaszły.
                 //if(cursor_centred) printf("pos= %f %f %f\n", obserwator.getPosition().x, obserwator.getPosition().y, obserwator.getPosition().z);
+
+                move_ghost(dt);
 
                 if(gravity_on) obserwator.fall(dt, OBSTACLES);
                 obserwator.move(dt, OBSTACLES);
