@@ -32,6 +32,20 @@ struct Torch{
         char facing = 0; //{0=X+}{1=X-}{2=Z+}{3=Z-}
 };
 
+enum class MovePhase { Left, Up_Left, Up_Right, Right };
+MovePhase currentPhase = MovePhase::Left;
+float speed = 10.0f;
+float traveled = 0.0f;
+float totalTraveled = 0.0f;
+float wwidth, wlength, lheight, lwidth;
+
+struct Ghost {
+        glm::vec3 startingPosition;
+        glm::vec3 position;
+        MovePhase phase = MovePhase::Left;
+};
+
+
 using namespace std;
 
 float zNear = 0.01; // bliższa odległość odcinania
@@ -60,24 +74,12 @@ std::vector<Wall_rect> obstacles_rect;
 std::vector<Wall_trian> obstacles_tr;
 std::vector<Ramp> ramps;
 std::vector<Obstacle*> OBSTACLES;
+std::vector<struct Ghost> ghosts;
 Wall_creator wall_creator;
 Observer obserwator;
 
 ShaderProgram* sp;
 ShaderProgram* observers_light;
-
-enum class MovePhase { Left, Up_Left, Up_Right, Right };
-MovePhase currentPhase = MovePhase::Left;
-float speed = 10.0f;
-float traveled = 0.0f;
-float totalTraveled = 0.0f;
-float wwidth, wlength, lheight, lwidth;
-
-struct Ghost {
-        glm::vec3 startingPosition;
-        glm::vec3 position;
-        MovePhase phase = MovePhase::Left;
-};
 
 void draw_torch(struct Torch torch, ShaderProgram* s_p){
         glm::mat4 M = glm::mat4(1.0f);
@@ -102,6 +104,85 @@ void draw_torch(struct Torch torch, ShaderProgram* s_p){
         } 
         glUniformMatrix4fv(s_p->u("M"), 1, false, glm::value_ptr(M));
         Models::torch.Draw(*s_p); //Narysowanie obiektu
+}
+
+void draw_ghost(Ghost ghost) {
+        glm::mat4 M = glm::mat4(1.0f);
+        M = glm::translate(M, ghost.position);
+
+        M = glm::scale(M, glm::vec3(2.0f));
+
+        if (ghost.phase == MovePhase::Left)
+                M = glm::rotate(M, PI, glm::vec3(0.0f, 1.0f, 0.0f));
+        else if (ghost.phase == MovePhase::Up_Left || ghost.phase == MovePhase::Up_Right)     
+                M = glm::rotate(M, PI/2, glm::vec3(0.0f, 1.0f, 0.0f));
+
+        glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(M));
+
+        Models::ghost.Draw(*spLambert);
+}
+
+void move_ghost(float deltaTime) {
+        float movement = speed * deltaTime;
+
+        switch (currentPhase) {
+                case MovePhase::Left:
+                        for (int i = 0; i < ghosts.size(); i++) {
+                                ghosts[i].position += glm::vec3(0.0f, 0.0f, -movement); 
+                        }
+                        traveled += movement;
+                        if (traveled > (wwidth * lheight + 3)) {
+                                currentPhase = MovePhase::Up_Left;
+                                for (int i = 0; i < ghosts.size(); i++) ghosts[i].phase = MovePhase::Up_Left;
+                                traveled = 0;
+                        }
+                        break;
+                case MovePhase::Up_Left:
+                        for (int i = 0; i < ghosts.size(); i++) {
+                                ghosts[i].position += glm::vec3(movement, 0.0f, 0.0f); 
+                        }
+                        traveled += movement;
+                        totalTraveled += movement;
+                        if (traveled > wwidth) {
+                                currentPhase = MovePhase::Right;
+                                for (int i = 0; i < ghosts.size(); i++) ghosts[i].phase = MovePhase::Right;
+                                traveled = 0;
+                        }
+                        break;
+                case MovePhase::Right:
+                        for (int i = 0; i < ghosts.size(); i++) {
+                                ghosts[i].position += glm::vec3(0.0f, 0.0f, movement); 
+                        }
+                        traveled += movement;
+                        if (traveled > wwidth * lheight + 3) {
+                                currentPhase = MovePhase::Up_Right;
+                                for (int i = 0; i < ghosts.size(); i++) ghosts[i].phase = MovePhase::Up_Right;
+                                traveled = 0;
+                        }
+                        break;
+                case MovePhase::Up_Right:
+                        for (int i = 0; i < ghosts.size(); i++) {
+                                ghosts[i].position += glm::vec3(movement, 0.0f, 0.0f);
+                        }
+                        traveled += movement;
+                        totalTraveled += movement;
+                        if (traveled > wwidth) {
+                                currentPhase = MovePhase::Left;
+                                for (int i = 0; i < ghosts.size(); i++) ghosts[i].phase = MovePhase::Left;
+                                traveled = 0;
+                        }
+                        break;
+        }
+
+        if (totalTraveled > wwidth * lwidth) {
+                for (int i = 0; i < ghosts.size(); i++) {
+                        ghosts[i].position = ghosts[i].startingPosition;
+                        ghosts[i].phase = MovePhase::Left;
+                        currentPhase = MovePhase::Left;
+                } 
+                totalTraveled = 0.0f;
+                traveled = 0;
+        }
 }
 
 bool porownaj_odleglosci(glm::vec3 p1, glm::vec3 p2){
@@ -588,7 +669,10 @@ void prepareScene(){
                 duchy.close();
         }
 
-        doors.push_back(Door(glm::vec3(-14.0, 0.0, 7.0), 6.0));
+        Ghost g;
+        g.position=glm::vec3(5.0, 1.0, 5.0);
+        g.startingPosition=glm::vec3(5.0, 1.0, 5.0);
+        ghosts.push_back(g);
 
 
         for(unsigned int i=0;i<obstacles_rect.size();i++) OBSTACLES.push_back(&obstacles_rect[i]);
@@ -612,6 +696,10 @@ void drawScene(GLFWwindow* window, float dt){
         for(unsigned int i=0;i<torches[current_floor].size();i++){
                draw_torch(torches[current_floor][i], observers_light);
         }
+        for (int i = 0; i < ghosts.size(); i++) {
+                draw_ghost(ghosts[i]);
+        }
+
 
         glUniform4f(observers_light->u("camera_position"), obserwator.getCameraPosition().x, obserwator.getCameraPosition().y, obserwator.getCameraPosition().z, 0.0);
         for(unsigned short i=0;i<maxActive_lights;i++){

@@ -148,7 +148,7 @@ void Labyrinth::print() {
     cout << "+" << endl;
 }
 
-void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float wallHeight, float wallWidth, unsigned short liczba_pochodni){
+void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float wallHeight, float wallWidth, float floorThickness, float doorWidth, unsigned short liczba_pochodni){
         ofstream sciany, podlogi, rampy, dachy, pochodnie, kraty, duchy;
         sciany.open("input/labyrinth_" + to_string(labyrinthNumber) + ".txt");
         podlogi.open("input/floors_" + to_string(labyrinthNumber) + ".txt");
