@@ -148,13 +148,14 @@ void Labyrinth::print() {
     cout << "+" << endl;
 }
 
-void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float wallHeight, float wallWidth, float floorThickness, unsigned short liczba_pochodni){
+void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float wallHeight, float wallWidth, float floorThickness, float doorWidth, unsigned short liczba_pochodni){
         ofstream sciany, podlogi, rampy, dachy, pochodnie, kraty;
         sciany.open("input/labyrinth_" + to_string(labyrinthNumber) + ".txt");
         podlogi.open("input/floors_" + to_string(labyrinthNumber) + ".txt");
         rampy.open("input/rampy_" + to_string(labyrinthNumber) + ".txt");
         pochodnie.open("input/pochodnie_"+to_string(labyrinthNumber)+".txt");
         kraty.open("input/kraty_"+to_string(labyrinthNumber)+".txt");
+
 
         //float floorThickness = 2.0f;
         int stairsRoomLength = 4, stairsRoomWidth = 2;
@@ -390,16 +391,18 @@ void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float
         }
 
         bool krata[szerokosc][wysokosc] = { false };
-        for(int i = 0; i < 10;) {
+        for(int i = 0; i < numberOfFloors*10;i++) {
             int x = rand() % (szerokosc-1), y = rand() % (wysokosc-1);
 
             if(!sciana[x][y][1] && sciana[x][y][2] && sciana[x][y][0] && !sciana[x][y][3] && !krata[x][y]){
                 i++;
                 kraty << (szerokosc - x - 1) * (wallWidth) + (wallWidth / 2) << " " << (labyrinthNumber * wallHeight) + (wallHeight / 2) + (floorThickness * labyrinthNumber) << " " <<  y * (wallWidth) + (wallWidth / 2) + (wallLength / 2) << " " << 0 << endl;
                 krata[x][y] = true;
-            } else if (sciana[x][y][1] && !sciana[x][y][2] && !sciana[x][y][0] && sciana[x][y][3] && !krata[x][y]) {
+            }
+            else if (sciana[x][y][1] && !sciana[x][y][2] && !sciana[x][y][0] && sciana[x][y][3] && !krata[x][y]) {
                 i++;
-                kraty << (szerokosc - x - 1) * (wallWidth) + (wallWidth / 2) + (wallLength / 2) << " " << (labyrinthNumber * wallHeight) + (wallHeight / 2) + (floorThickness * labyrinthNumber) << " " <<  y * (wallWidth) + (wallWidth / 2) + (wallLength / 2) << " " << 1 << endl;
+                //kraty << (szerokosc - x - 1) * (wallWidth) + (wallWidth / 2) + (wallLength / 2) << " " << (labyrinthNumber * wallHeight) + (floorThickness * labyrinthNumber) << " " <<  y * (wallWidth) + (wallWidth / 2) + (wallLength / 2) << " " << 1 << endl;
+                kraty << (szerokosc - x - 1) * (wallWidth) + wallLength + (wallWidth - wallLength - doorWidth)/2 << " " << (labyrinthNumber * wallHeight) + (floorThickness * labyrinthNumber) << " " <<  y * (wallWidth) + (wallWidth / 2) + (wallLength / 2) << " " << 1 << endl;
                 krata[x][y] = true;
             }
         }

@@ -180,6 +180,7 @@ class Fence : public Obstacle_rect{
         float final_height; // wysokość, na jaką podeniść ma się krata
         static constexpr float velocity_value = 1.0; // szybkość podnoszenia się kraty
         volatile bool is_moving = false;
+        volatile bool is_existent = true;
     public: 
         Fence();
         Fence(glm::vec3 position);
@@ -200,9 +201,24 @@ class Fence : public Obstacle_rect{
 
 class Door : public Obstacle_rect{
     protected:
-
-    public:
+        float final_angle_horizontal; // kat, o jaki obrócić mają się drzwi
+        static constexpr float velocity_value = 3.14159265359/4; // szybkość kątowa podnoszenia się kraty
+        volatile bool is_moving = false;
         
+    public:
+        Door();
+        Door(glm::vec3 position, float scale);
+
+        void setAngle_horizontal(float alpha);
+        void setAngle_vertical(float alpha);
+        void draw(glm::mat4 P, glm::mat4 V, ShaderProgram* s_p); // metoda rysująca
+        bool is_within(glm::vec3 punkt, float radius); // metoda sprawdzająca, czy jakikolwiek punkt w odległości 'radius' od 'punkt' znajduje się wewnątrz bryły
+
+        glm::vec3 getSize();
+        glm::vec3 getPosition();
+        bool is_clicked_on(const glm::vec3& rayOrigin, const glm::vec3& rayDir, float& t);
+        void open_close();
+        void move(float T);
 };
 
 #endif

@@ -1,8 +1,8 @@
-bool Obstacle_rect::is_within(glm::vec3 punkt, float r){
-    glm::vec3 _punkt; // punkt w układzie współrzędnych muru
-    glm::vec3 _DBL = DBL - getSize()/2;
-    _punkt.z = -(punkt.x - _DBL.x)*sin(angle_horizontal) + (punkt.z - _DBL.z)*cos(angle_horizontal);
-    _punkt.y = -(punkt.x - _DBL.x)*cos(angle_horizontal)*sin(angle_vertical) + (punkt.y - _DBL.y)*cos(angle_vertical) - (punkt.z - _DBL.z)*sin(angle_horizontal)*sin(angle_vertical);
-    _punkt.x = (punkt.x - _DBL.x)*cos(angle_horizontal)*cos(angle_vertical) + (punkt.y - _DBL.y)*sin(angle_vertical) + (punkt.z - _DBL.z)*sin(angle_horizontal)*cos(angle_vertical);
-    return _punkt.x + r > 0 && _punkt.z + r > 0 && _punkt.y+r > 0 && _punkt.x-r < l && _punkt.z-r < w && _punkt.y-r < h;
-}
+    _rayDir.z = -(rayDir.x)*sin(angle_horizontal) + (rayDir.z)*cos(angle_horizontal);
+    _rayDir.y = -(rayDir.x)*cos(angle_horizontal)*sin(angle_vertical) + (rayDir.y)*cos(angle_vertical) - (rayDir.z)*sin(angle_horizontal)*sin(angle_vertical);
+    _rayDir.x = (rayDir.x)*cos(angle_horizontal)*cos(angle_vertical) + (rayDir.y)*sin(angle_vertical) + (rayDir.z)*sin(angle_horizontal)*cos(angle_vertical);
+
+    glm::vec3 _rayOrigin; // rayOrigin w układzie współrzędnych drzwi
+    _rayOrigin.z = -(rayOrigin.x)*sin(angle_horizontal) + (rayOrigin.z)*cos(angle_horizontal);
+    _rayOrigin.y = -(rayOrigin.x)*cos(angle_horizontal)*sin(angle_vertical) + (rayOrigin.y)*cos(angle_vertical) - (rayOrigin.z)*sin(angle_horizontal)*sin(angle_vertical);
+    _rayOrigin.x = (rayOrigin.x)*cos(angle_horizontal)*cos(angle_vertical) + (rayOrigin.y)*sin(angle_vertical) + (rayOrigin.z)*sin(angle_horizontal)*cos(angle_vertical);

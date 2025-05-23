@@ -47,13 +47,14 @@ bool cursor_centred = true;
 bool gravity_on = false;
 
 float zasieg_reki = 3.0;
-float coef = 1.0;
+float doorHeight = 6.0;
 
 int numberOfFloors = 4;
 float wallHeight = 9.0f;
 float floorThickness = 2.0;
 std::vector<std::vector<struct Torch>> torches;
 std::vector<Fence> fences;
+std::vector<Door> doors;
 std::vector<GLuint> TEXTURES;
 std::vector<Wall_rect> obstacles_rect;
 std::vector<Wall_trian> obstacles_tr;
@@ -323,8 +324,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 else if(key==KEY_MOVE_JUMP)  obserwator.jump();
                 else if(key==KEY_INC_MOUSE_SENSITIVITY) mouse_sensitivity *= 2;
                 else if(key==KEY_DEC_MOUSE_SENSITIVITY) mouse_sensitivity *= 0.5;
-                else if(key==GLFW_KEY_O) coef *= 2;
-                else if(key==GLFW_KEY_P) coef *= 0.5;
 
 		std::thread t(key_repetition, window, key, scancode, action, mod);
 		t.detach(); 
@@ -364,7 +363,25 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
                 if(selectedIndex!=-1){
                         fences[selectedIndex].setIsSelected(true);
                         fences[selectedIndex].change_height(floorThickness+wallHeight);
-                } 
+                        return;
+                }
+                
+                selectedIndex = -1;
+                closestT = 1e9;
+                for (int i = 0; i < doors.size(); ++i) {
+                        float t;
+                        if (doors[i].is_clicked_on(obserwator.getCameraPosition(), obserwator.getCameraViewVector(), t)) {
+                                if (t < closestT) {
+                                        closestT = t;
+                                        selectedIndex = i;
+                                }
+                        }
+                }
+                // Wyznacz najbliższy
+                if(selectedIndex!=-1){
+                        doors[selectedIndex].open_close();
+                        return;
+                }
         }
 }
 GLuint readTexture(const char* scianyname) {
@@ -440,7 +457,7 @@ void prepareScene(){
 
                 Labyrinth labyrinth = Labyrinth(labyrinthHeight, labirynthWidth);
                 labyrinth.print();
-                labyrinth.generateCoordinates(i, wallLength, wallHeight, wallWidth, floorThickness, maxTorchesPerFloor);
+                labyrinth.generateCoordinates(i, wallLength, wallHeight, wallWidth, floorThickness, doorHeight/1.5, maxTorchesPerFloor);
 
                 ifstream sciany("input/labyrinth_" + to_string(i) + ".txt");
                 ifstream podlogi("input/floors_" + to_string(i) + ".txt");
@@ -521,10 +538,16 @@ void prepareScene(){
                         bool rotate;
 
                         if (iss >> x >> y >> z >> rotate) {
-                                Fence tmp(glm::vec3(x, y, z));
-                                if(rotate) tmp.setAngle_horizontal(PI/2);
-                                else tmp.setAngle_horizontal(0);
-                                fences.push_back(tmp);
+                                if(!rotate){
+                                        Fence tmp(glm::vec3(x, y, z));
+                                        tmp.setAngle_horizontal(0);
+                                        fences.push_back(tmp);
+                                }
+                                else{
+                                        Door tmp(glm::vec3(x,y,z), doorHeight);
+                                        tmp.setAngle_horizontal(0);
+                                        doors.push_back(tmp);
+                                }
                         }
                 }
 
@@ -535,12 +558,14 @@ void prepareScene(){
                 kraty.close();
         }
 
-        fences.push_back(Fence(glm::vec3(-9.0, 4.0, 5.0)));
+        doors.push_back(Door(glm::vec3(-14.0, 0.0, 7.0), 6.0));
+
 
         for(unsigned int i=0;i<obstacles_rect.size();i++) OBSTACLES.push_back(&obstacles_rect[i]);
         for(unsigned int i=0;i<obstacles_tr.size();i++) OBSTACLES.push_back(&obstacles_tr[i]);
         for(unsigned int i=0;i<ramps.size();i++) OBSTACLES.push_back(&ramps[i]);
         for(unsigned int i=0;i<fences.size();i++) OBSTACLES.push_back(&fences[i]);
+        for(unsigned int i=0;i<doors.size();i++) OBSTACLES.push_back(&doors[i]);
 }
 
 void drawScene(GLFWwindow* window, float dt){
@@ -556,34 +581,6 @@ void drawScene(GLFWwindow* window, float dt){
         
         for(unsigned int i=0;i<torches[current_floor].size();i++){
                draw_torch(torches[current_floor][i], observers_light);
-        }
-               
-        M = glm::mat4(1.0f);
-        M = glm::translate(M, glm::vec3(2.0, 1.0, 2.0));
-        M = glm::scale(M, glm::vec3(4.0/1.5, 4.0, 4.0/10.0)/(glm::vec3(-1744.371826171875, -181.78280639648438, 743.0694580078125) - glm::vec3(-1893.22802734375, -400.7828063964844, 738.0694580078125)));
-         M = glm::translate(M, glm::vec3(1893.22802734375, 400.7828063964844, -738.0694580078125));
-        observers_light->use();
-        glUniformMatrix4fv(observers_light->u("M"), 1, false, glm::value_ptr(M));
-        glUniformMatrix4fv(observers_light->u("P"), 1, false, glm::value_ptr(P));
-        glUniformMatrix4fv(observers_light->u("V"), 1, false, glm::value_ptr(V));
-        Models::door.Draw(*observers_light);
-        observers_light->use();
-
-        M = glm::mat4(1.0f);
-        M = glm::translate(M, glm::vec3(2.0, 1.0, 2.0));
-                M = glm::rotate(M, PI/2, glm::vec3(0.0, 1.0, 0.0));
-        M = glm::scale(M, glm::vec3(4.0/1.5, 4.0, 4.0/10.0)/(glm::vec3(-1744.371826171875, -181.78280639648438, 743.0694580078125) - glm::vec3(-1893.22802734375, -400.7828063964844, 738.0694580078125)));
-        M = glm::translate(M, glm::vec3(1893.22802734375, 400.7828063964844, -738.0694580078125));
-        observers_light->use();
-        glUniformMatrix4fv(observers_light->u("M"), 1, false, glm::value_ptr(M));
-        glUniformMatrix4fv(observers_light->u("P"), 1, false, glm::value_ptr(P));
-        glUniformMatrix4fv(observers_light->u("V"), 1, false, glm::value_ptr(V));
-        Models::door.Draw(*observers_light);
-        observers_light->use();
-
-        
-        for (int i = 0; i < fences.size(); i++) {
-                fences[i].draw(P, V, observers_light);
         }
 
         glUniform4f(observers_light->u("camera_position"), obserwator.getCameraPosition().x, obserwator.getCameraPosition().y, obserwator.getCameraPosition().z, 0.0);
@@ -646,12 +643,13 @@ int main(void){
 
                 drawScene(window, dt); //Wykonaj procedurę rysującą
                 glfwPollEvents(); //Wykonaj procedury callback w zalezności od zdarzeń jakie zaszły.
-                if(cursor_centred) printf("pos= %f %f %f\n", obserwator.getPosition().x, obserwator.getPosition().y, obserwator.getPosition().z);
+                //if(cursor_centred) printf("pos= %f %f %f\n", obserwator.getPosition().x, obserwator.getPosition().y, obserwator.getPosition().z);
 
                 if(gravity_on) obserwator.fall(dt, OBSTACLES);
                 obserwator.move(dt, OBSTACLES);
 
                 for(unsigned short i=0;i<fences.size();i++) fences[i].move(dt);
+                for(unsigned short i=0;i<doors.size();i++) doors[i].move(dt);
         }
 
         freeOpenGLProgram(window);

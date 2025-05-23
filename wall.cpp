@@ -623,6 +623,9 @@ void Wall_creator::abort_wall_creation(){
 // Obstacle_rect-------------------------------------------------------------------------------------------
 
 bool Obstacle_rect::rayIntersectsAABB(const glm::vec3& rayOrigin, const glm::vec3& rayDir, const glm::vec3& boxMin, const glm::vec3& boxMax, float& t) {
+    printf("rayOrigin x=%f, y=%f, z=%f\n", rayOrigin.x, rayOrigin.y, rayOrigin.z);
+    printf("rayDir x=%f, y=%f, z=%f\n", rayDir.x, rayDir.y, rayDir.z);
+
     float tmin = (boxMin.x - rayOrigin.x) / rayDir.x;
     float tmax = (boxMax.x - rayOrigin.x) / rayDir.x;
     if (tmin > tmax) std::swap(tmin, tmax);
@@ -689,12 +692,7 @@ void Obstacle_rect::draw(glm::mat4 P, glm::mat4 V, ShaderProgram* s_p){
 }
 
 bool Obstacle_rect::is_within(glm::vec3 punkt, float r){
-    glm::vec3 _punkt; // punkt w układzie współrzędnych muru
-    glm::vec3 _DBL = DBL - getSize()/glm::vec3(2.0, 2.0, 2.0);
-    _punkt.z = -(punkt.x - _DBL.x)*sin(angle_horizontal) + (punkt.z - _DBL.z)*cos(angle_horizontal);
-    _punkt.y = -(punkt.x - _DBL.x)*cos(angle_horizontal)*sin(angle_vertical) + (punkt.y - _DBL.y)*cos(angle_vertical) - (punkt.z - _DBL.z)*sin(angle_horizontal)*sin(angle_vertical);
-    _punkt.x = (punkt.x - _DBL.x)*cos(angle_horizontal)*cos(angle_vertical) + (punkt.y - _DBL.y)*sin(angle_vertical) + (punkt.z - _DBL.z)*sin(angle_horizontal)*cos(angle_vertical);
-    return _punkt.x + r > l*0.25 && _punkt.z + r > 0 && _punkt.y+r > 0 && _punkt.x-r < l*0.75 && _punkt.z-r < w && _punkt.y-r < h;
+    return false;
 }
 
 glm::vec3 Obstacle_rect::getSize(){
@@ -761,8 +759,9 @@ void Fence::setAngle_vertical(float alpha){
 }
 
 void Fence::draw(glm::mat4 P, glm::mat4 V, ShaderProgram* s_p){
-    glm::vec3 scaleFactor = glm::vec3(6.0f, 8.0f, 0.5f) / glm::vec3(3.0f, 4.013751983642578f, 0.25f);
+    if(!is_existent) return;
 
+    glm::vec3 scaleFactor = glm::vec3(6.0f, 8.0f, 0.5f) / glm::vec3(3.0f, 4.013751983642578f, 0.25f);
     glm::mat4 M = glm::mat4(1.0f);
     M = glm::translate(M, getPosition());
     M = glm::rotate(M, (float)(-PI/2), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -773,8 +772,14 @@ void Fence::draw(glm::mat4 P, glm::mat4 V, ShaderProgram* s_p){
     Models::fence.Draw(*s_p);
 }
 
-bool Fence::is_within(glm::vec3 punkt, float radius){
-    return Obstacle_rect::is_within(punkt, radius);
+bool Fence::is_within(glm::vec3 punkt, float r){
+    if(!is_existent) return false;
+    glm::vec3 _punkt; // punkt w układzie współrzędnych muru
+    glm::vec3 _DBL = DBL - getSize()/glm::vec3(2.0, 2.0, 2.0);
+    _punkt.z = -(punkt.x - _DBL.x)*sin(angle_horizontal) + (punkt.z - _DBL.z)*cos(angle_horizontal);
+    _punkt.y = -(punkt.x - _DBL.x)*cos(angle_horizontal)*sin(angle_vertical) + (punkt.y - _DBL.y)*cos(angle_vertical) - (punkt.z - _DBL.z)*sin(angle_horizontal)*sin(angle_vertical);
+    _punkt.x = (punkt.x - _DBL.x)*cos(angle_horizontal)*cos(angle_vertical) + (punkt.y - _DBL.y)*sin(angle_vertical) + (punkt.z - _DBL.z)*sin(angle_horizontal)*cos(angle_vertical);
+    return _punkt.x + r > l*0.25 && _punkt.z + r > 0 && _punkt.y+r > 0 && _punkt.x-r < l*0.75 && _punkt.z-r < w && _punkt.y-r < h;
 }
 
 glm::vec3 Fence::getSize(){
@@ -794,6 +799,7 @@ void Fence::setIsSelected(bool is_selected){
 }
 
 bool Fence::is_clicked_on(const glm::vec3& rayOrigin, const glm::vec3& rayDir, float& t){
+    if(!is_existent) return false;
     return Obstacle_rect::is_clicked_on(rayOrigin, rayDir, t);
 }
 
@@ -807,10 +813,109 @@ void Fence::move(float T){
         float margin = 0.01;
         if(final_height - margin < DBL.y && final_height + margin > DBL.y){
             DBL.y = final_height;
+            if(is_moving) is_existent = false;
             is_moving = false;
         }
         if(final_height > DBL.y) DBL.y += velocity_value*T;
         else if(final_height < DBL.y) DBL.y -= velocity_value*T;
+    }
+}
+
+// DOOR ---------------------------------------------------------------------------------------------
+
+Door::Door(){
+    DBL = glm::vec3(0.0, 0.0, 0.0);
+    l = 4.0/1.5;
+    h = 4.0;
+    w = 4.0/10.0;
+    angle_horizontal = 0.0;
+    final_angle_horizontal = 0.0;
+    angle_vertical = 0.0;   
+}
+
+Door::Door(glm::vec3 position, float scale){
+    DBL = position;
+    l = scale/1.5;
+    h = scale;
+    w = scale/10.0;
+    angle_horizontal = 0.0;
+    final_angle_horizontal = 0.0;
+    angle_vertical = 0.0;  
+}
+
+void Door::setAngle_horizontal(float alpha){
+    Obstacle_rect::setAngle_horizontal(alpha);
+}
+
+void Door::setAngle_vertical(float alpha){
+    Obstacle_rect::setAngle_vertical(alpha);
+}
+
+void Door::draw(glm::mat4 P, glm::mat4 V, ShaderProgram* s_p){
+    glm::mat4 M = glm::mat4(1.0f);
+    M = glm::translate(M, getPosition());
+    M = glm::rotate(M, (float) 0.0, glm::vec3(0.0, 1.0, 0.0));
+    M = glm::rotate(M, (float) -angle_horizontal, glm::vec3(0.0, 1.0, 0.0));
+    M = glm::scale(M, getSize()/(glm::vec3(-1744.371826171875, -181.78280639648438, 743.0694580078125) - glm::vec3(-1893.22802734375, -400.7828063964844, 738.0694580078125)));
+    M = glm::translate(M, glm::vec3(1893.22802734375, 400.7828063964844, -738.0694580078125));
+    s_p->use();
+    glUniformMatrix4fv(s_p->u("M"), 1, false, glm::value_ptr(M));
+    glUniformMatrix4fv(s_p->u("P"), 1, false, glm::value_ptr(P));
+    glUniformMatrix4fv(s_p->u("V"), 1, false, glm::value_ptr(V));
+    Models::door.Draw(*s_p);
+    s_p->use();
+}
+
+bool Door::is_within(glm::vec3 punkt, float r){
+    glm::vec3 _punkt; // punkt w układzie współrzędnych muru
+    _punkt.z = -(punkt.x - DBL.x)*sin(angle_horizontal) + (punkt.z - DBL.z)*cos(angle_horizontal);
+    _punkt.y = -(punkt.x - DBL.x)*cos(angle_horizontal)*sin(angle_vertical) + (punkt.y - DBL.y)*cos(angle_vertical) - (punkt.z - DBL.z)*sin(angle_horizontal)*sin(angle_vertical);
+    _punkt.x = (punkt.x - DBL.x)*cos(angle_horizontal)*cos(angle_vertical) + (punkt.y - DBL.y)*sin(angle_vertical) + (punkt.z - DBL.z)*sin(angle_horizontal)*cos(angle_vertical);
+    return _punkt.x + r > 0 && _punkt.z + r > 0 && _punkt.y+r > 0 && _punkt.x-r < l && _punkt.z-r < w && _punkt.y-r < h;
+}
+
+glm::vec3 Door::getSize(){
+    return glm::vec3(l, h, w);
+}
+
+glm::vec3 Door::getPosition(){
+    return DBL;
+}
+
+bool Door::is_clicked_on(const glm::vec3& rayOrigin, const glm::vec3& rayDir, float& t){
+    glm::vec3 boxMin = getPosition();
+    glm::vec3 boxMax = getPosition() + getSize();
+
+    glm::vec3 _rayDir; // rayDir w układzie współrzędnych drzwi
+    _rayDir.z = -(rayDir.x)*sin(angle_horizontal) + (rayDir.z)*cos(angle_horizontal);
+    _rayDir.y = rayDir.y;
+    _rayDir.x = (rayDir.x)*cos(angle_horizontal) + (rayDir.z)*sin(angle_horizontal);
+
+    return Obstacle_rect::rayIntersectsAABB(rayOrigin, _rayDir, boxMin, boxMax, t);
+}
+
+void Door::open_close(){
+    if(!is_moving){
+        if(angle_horizontal < PI/2){ // drzwi zamknięte
+            is_moving = true;
+            final_angle_horizontal = PI/2;
+        }
+        else{ // drzwi otwarte
+            is_moving = true;
+            final_angle_horizontal = 0.0;
+        }
+    }
+}
+
+void Door::move(float T){
+    if(is_moving){
+        float margin = 0.01;
+        if(final_angle_horizontal - margin < angle_horizontal && final_angle_horizontal + margin > angle_horizontal){
+            angle_horizontal = final_angle_horizontal;
+            is_moving = false;
+        }
+        if(final_angle_horizontal > angle_horizontal) angle_horizontal += velocity_value*T;
+        else if(final_angle_horizontal < angle_horizontal) angle_horizontal -= velocity_value*T;
     }
 }
 
