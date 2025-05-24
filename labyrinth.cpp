@@ -207,7 +207,7 @@ void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float
 
         // Generowanie podłogi dla końca labiryntu
         if (labyrinthNumber % 2 != 0 && (labyrinthNumber + 1) == numberOfFloors) {
-            podlogi << -(wallWidth * i) << " " << labyrinthNumber * (wallHeight+floorThickness) << " " << 0 << " " 
+            podlogi << -(wallWidth * i) << " " << labyrinthNumber * (wallHeight+floorThickness) - floorThickness << " " << 0 << " " 
                 << i * wallWidth << " " << floorThickness << " " << i * wallWidth << " " << 0 << endl;
         }
 

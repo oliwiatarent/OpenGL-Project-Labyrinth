@@ -58,7 +58,7 @@ unsigned short screenwidth = 500;
 unsigned short screenheight = 500;
 float aspectRatio = 1.0;
 bool cursor_centred = true;
-bool gravity_on = false;
+bool gravity_on = true;
 
 float zasieg_reki = 3.0;
 float doorHeight = 6.0;
@@ -523,7 +523,7 @@ void initOpenGLProgram(GLFWwindow* window) {
         TEXTURES_WALL.push_back(readTexture("assests/textures/bricks_02.png"));
         TEXTURES_WALL.push_back(readTexture("assests/textures/bricks.png"));
         TEXTURES_WALL.push_back(readTexture("assests/textures/cobblestone.png"));
-        TEXTURES_FLOOR.push_back(readTexture("assests/textures/deski.png"));
+        //TEXTURES_FLOOR.push_back(readTexture("assests/textures/deski.png"));
         TEXTURES_FLOOR.push_back(readTexture("assests/textures/dirt.png"));
         TEXTURES_WALL.push_back(readTexture("assests/textures/ground_01.png"));
         TEXTURES_WALL.push_back(readTexture("assests/textures/ground_02.png"));
@@ -552,7 +552,7 @@ void freeOpenGLProgram(GLFWwindow* window) {
 
 void prepareMoveables(){
         obserwator.setRadius(0.02);
-        obserwator.setPosition(-4, 1, 4);
+        obserwator.setPosition(-15, 1, 4);
         obserwator.setVelocity_value(7.0);
 }
 void prepareScene(){
@@ -784,8 +784,14 @@ int main(void){
 
                 move_ghost(dt);
 
-                if(gravity_on) obserwator.fall(dt, OBSTACLES);
-                obserwator.move(dt, OBSTACLES);
+                if(gravity_on){
+                        obserwator.fall(dt, OBSTACLES);
+                        obserwator.move(dt, OBSTACLES);
+                } 
+                else{
+                        static std::vector<Obstacle*> brak_przeszkod;
+                        obserwator.move(dt, brak_przeszkod);
+                }
 
                 for(unsigned short i=0;i<fences.size();i++) fences[i].move(dt);
                 for(unsigned short i=0;i<doors.size();i++) doors[i].move(dt);
