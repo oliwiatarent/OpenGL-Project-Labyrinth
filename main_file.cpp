@@ -85,7 +85,6 @@ void draw_torch(struct Torch torch, ShaderProgram* s_p){
         glm::mat4 M = glm::mat4(1.0f);
         M = glm::translate(M, torch.position);
         M = glm::scale(M, glm::vec3(0.02f));
-        //glUniform4f(s_p->u("color"), 0.0, 1.0, 0.0, 1);
         if(torch.facing==48){
                 M = glm::rotate(M, PI/10, glm::vec3(0.0, 0.0, 1.0));
                 M = glm::rotate(M, PI/2, glm::vec3(0.0, 1.0, 0.0));
@@ -585,7 +584,7 @@ void prepareScene(){
                         float xl, yd, zb, dlugosc, wysokosc, szerokosc;
 
                         if (iss >> xl >> yd >> zb >> dlugosc >> wysokosc >> szerokosc) {
-                                printf("xl = %lf, yd = %lf, zb = %lf, d = %lf, w = %lf, s = %lf\n", xl, yd, zb, dlugosc, wysokosc, szerokosc);
+                                //printf("xl = %lf, yd = %lf, zb = %lf, d = %lf, w = %lf, s = %lf\n", xl, yd, zb, dlugosc, wysokosc, szerokosc);
 
                                 float step = 5.0;
                                 for(short iw=0;iw<1+szerokosc/step;iw++) for(short il=0;il<1+dlugosc/step;il++){
@@ -673,6 +672,10 @@ void prepareScene(){
         g.position=glm::vec3(5.0, 1.0, 5.0);
         g.startingPosition=glm::vec3(5.0, 1.0, 5.0);
         ghosts.push_back(g);
+
+        Door de(glm::vec3(-6.0, 0.0, 6.0), doorHeight);
+        de.setAngle_horizontal(0);
+        doors.push_back(de);
 
 
         for(unsigned int i=0;i<obstacles_rect.size();i++) OBSTACLES.push_back(&obstacles_rect[i]);

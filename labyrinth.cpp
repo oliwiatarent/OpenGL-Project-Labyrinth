@@ -403,9 +403,17 @@ void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float
             }
             else if (sciana[x][y][1] && !sciana[x][y][2] && !sciana[x][y][0] && sciana[x][y][3] && !krata[x][y]) {
                 i++;
-                //kraty << (szerokosc - x - 1) * (wallWidth) + (wallWidth / 2) + (wallLength / 2) << " " << (labyrinthNumber * wallHeight) + (floorThickness * labyrinthNumber) << " " <<  y * (wallWidth) + (wallWidth / 2) + (wallLength / 2) << " " << 1 << endl;
                 kraty << (szerokosc - x - 1) * (wallWidth) + wallLength + (wallWidth - wallLength - doorWidth)/2 << " " << (labyrinthNumber * wallHeight) + (floorThickness * labyrinthNumber) << " " <<  y * (wallWidth) + (wallWidth / 2) + (wallLength / 2) << " " << 1 << endl;
                 krata[x][y] = true;
+
+                sciany << (szerokosc - x - 1) * (wallWidth) + wallLength + (wallWidth - wallLength - doorWidth)/2 << " " << (labyrinthNumber * wallHeight) + (floorThickness * labyrinthNumber) << " " <<  y * (wallWidth) + (wallWidth / 2) + (wallLength / 2) << " "
+                    << doorWidth*1.5/10.0  << " " << doorWidth*1.5 << " " << (wallWidth - wallLength - doorWidth)/2 << " " << 1 << endl;
+
+                sciany << (szerokosc - x - 1) * (wallWidth) + (wallWidth) << " " << (labyrinthNumber * wallHeight) + (floorThickness * labyrinthNumber) << " " <<  y * (wallWidth) + (wallWidth / 2) + (wallLength / 2) << " "
+                    << doorWidth*1.5/10.0  << " " << doorWidth*1.5 << " " << (wallWidth - wallLength - doorWidth)/2 << " " << 1 << endl;
+
+                sciany << (szerokosc - x - 1) * (wallWidth) + wallWidth << " " << (labyrinthNumber * wallHeight) + (floorThickness * labyrinthNumber) + doorWidth*1.5 << " " <<  y * (wallWidth) + (wallWidth / 2) + (wallLength / 2) << " "
+                    << doorWidth*1.5/10.0  << " " << wallHeight - doorWidth*1.5 << " " << (wallWidth - wallLength) << " " << 1 << endl;
             }
         }
 

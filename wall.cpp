@@ -623,9 +623,6 @@ void Wall_creator::abort_wall_creation(){
 // Obstacle_rect-------------------------------------------------------------------------------------------
 
 bool Obstacle_rect::rayIntersectsAABB(const glm::vec3& rayOrigin, const glm::vec3& rayDir, const glm::vec3& boxMin, const glm::vec3& boxMax, float& t) {
-    printf("rayOrigin x=%f, y=%f, z=%f\n", rayOrigin.x, rayOrigin.y, rayOrigin.z);
-    printf("rayDir x=%f, y=%f, z=%f\n", rayDir.x, rayDir.y, rayDir.z);
-
     float tmin = (boxMin.x - rayOrigin.x) / rayDir.x;
     float tmax = (boxMax.x - rayOrigin.x) / rayDir.x;
     if (tmin > tmax) std::swap(tmin, tmax);
@@ -884,21 +881,24 @@ glm::vec3 Door::getPosition(){
 
 bool Door::is_clicked_on(const glm::vec3& rayOrigin, const glm::vec3& rayDir, float& t){
     glm::vec3 boxMin = getPosition();
-    glm::vec3 boxMax = getPosition() + getSize();
+    glm::vec3 boxMax = getPosition();
 
-    glm::vec3 _rayDir; // rayDir w układzie współrzędnych drzwi
-    _rayDir.z = -(rayDir.x)*sin(angle_horizontal) + (rayDir.z)*cos(angle_horizontal);
-    _rayDir.y = rayDir.y;
-    _rayDir.x = (rayDir.x)*cos(angle_horizontal) + (rayDir.z)*sin(angle_horizontal);
+    boxMax.x += l * cos(-angle_horizontal) + w * sin(-angle_horizontal);
+    boxMax.y += h;
+    boxMax.z += w * cos(angle_horizontal) + l * sin(angle_horizontal);
 
-    return Obstacle_rect::rayIntersectsAABB(rayOrigin, _rayDir, boxMin, boxMax, t);
+    if(boxMax.x  < boxMin.x) std::swap(boxMax.x, boxMin.x);
+    if(boxMax.y  < boxMin.y) std::swap(boxMax.y, boxMin.y);
+    if(boxMax.z  < boxMin.z) std::swap(boxMax.z, boxMin.z);
+
+    return Obstacle_rect::rayIntersectsAABB(rayOrigin, rayDir, boxMin, boxMax, t);
 }
 
 void Door::open_close(){
     if(!is_moving){
-        if(angle_horizontal < PI/2){ // drzwi zamknięte
+        if(angle_horizontal < PI/4){ // drzwi zamknięte
             is_moving = true;
-            final_angle_horizontal = PI/2;
+            final_angle_horizontal = PI*0.45;
         }
         else{ // drzwi otwarte
             is_moving = true;
