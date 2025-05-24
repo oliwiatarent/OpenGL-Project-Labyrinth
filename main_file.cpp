@@ -69,7 +69,8 @@ float floorThickness = 2.0;
 std::vector<std::vector<struct Torch>> torches;
 std::vector<Fence> fences;
 std::vector<Door> doors;
-std::vector<GLuint> TEXTURES;
+std::vector<GLuint> TEXTURES_FLOOR;
+std::vector<GLuint> TEXTURES_WALL;
 std::vector<Wall_rect> obstacles_rect;
 std::vector<Wall_trian> obstacles_tr;
 std::vector<Ramp> ramps;
@@ -269,7 +270,7 @@ void key_repetition_wall_creation(GLFWwindow* window, int key, int scancode, int
                         wall_creator.changeAngle_vertical(-dg);
                 }
                 else if(key==KEY_ASSIGN_WALL_NEXT_TEXTURE){
-                        wall_creator.assign_next_texture(TEXTURES);
+                        wall_creator.assign_next_texture(TEXTURES_WALL);
                 }
 		std::this_thread::sleep_for(std::chrono::milliseconds(50));
 	}
@@ -347,7 +348,7 @@ void key_callback_wall_creation(GLFWwindow* window, int key, int scancode, int a
                 wall_creator.changeAngle_vertical(-dg);
         }
         else if(key==KEY_ASSIGN_WALL_NEXT_TEXTURE){
-                wall_creator.assign_next_texture(TEXTURES);
+                wall_creator.assign_next_texture(TEXTURES_WALL);
         }
         std::thread t(key_repetition_wall_creation, window, key, scancode, action, mod);
         t.detach(); 
@@ -516,10 +517,23 @@ void initOpenGLProgram(GLFWwindow* window) {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         glfwSetCursorPos(window, screenwidth/2, screenheight/2);
 
-        TEXTURES.push_back(readTexture("assests/textures/drewno.png"));
-        //TEXTURES.push_back(readTexture("assests/textures/rock.png"));
-        TEXTURES.push_back(readTexture("assests/textures/marble.png"));
-        wall_creator.assign_next_texture(TEXTURES);
+        //TEXTURES.push_back(readTexture("assests/textures/drewno.png"));
+        TEXTURES_WALL.push_back(readTexture("assests/textures/marble.png"));
+        TEXTURES_FLOOR.push_back(readTexture("assests/textures/rock.png"));
+        TEXTURES_WALL.push_back(readTexture("assests/textures/bricks_02.png"));
+        TEXTURES_WALL.push_back(readTexture("assests/textures/bricks.png"));
+        TEXTURES_WALL.push_back(readTexture("assests/textures/cobblestone.png"));
+        TEXTURES_FLOOR.push_back(readTexture("assests/textures/deski.png"));
+        TEXTURES_FLOOR.push_back(readTexture("assests/textures/dirt.png"));
+        TEXTURES_WALL.push_back(readTexture("assests/textures/ground_01.png"));
+        TEXTURES_WALL.push_back(readTexture("assests/textures/ground_02.png"));
+        TEXTURES_FLOOR.push_back(readTexture("assests/textures/ground_03.png"));
+        TEXTURES_FLOOR.push_back(readTexture("assests/textures/ground_04.png"));
+        TEXTURES_WALL.push_back(readTexture("assests/textures/stone-wall.png"));
+        TEXTURES_FLOOR.push_back(readTexture("assests/textures/wood.png"));
+
+
+        wall_creator.assign_next_texture(TEXTURES_WALL);
         sp = new ShaderProgram("shaders/v_test.glsl", NULL, "shaders/f_test.glsl");
         observers_light = new ShaderProgram("shaders/v_distanced.glsl", NULL, "shaders/f_distanced.glsl");
 
@@ -532,7 +546,8 @@ void initOpenGLProgram(GLFWwindow* window) {
 void freeOpenGLProgram(GLFWwindow* window) {
         freeShaders();
         //************Tutaj umieszczaj kod, który należy wykonać po zakończeniu pętli głównej************
-        for(unsigned int i=0;i<TEXTURES.size();i++) glDeleteTextures(1, &TEXTURES[i]);
+        for(unsigned int i=0;i<TEXTURES_WALL.size();i++) glDeleteTextures(1, &TEXTURES_WALL[i]);
+        for(unsigned int i=0;i<TEXTURES_FLOOR.size();i++) glDeleteTextures(1, &TEXTURES_FLOOR[i]);
 }
 
 void prepareMoveables(){
@@ -549,6 +564,8 @@ void prepareScene(){
         
         for (int i = 0; i < numberOfFloors; i++) {
                 srand(std::chrono::high_resolution_clock::now().time_since_epoch().count() + i * 1337);
+                unsigned short rand_floor_texture_id = rand() % TEXTURES_FLOOR.size();
+                unsigned short rand_wall_texture_id = rand() % TEXTURES_WALL.size();
 
                 Labyrinth labyrinth = Labyrinth(labyrinthHeight, labyrinthWidth);
                 labyrinth.print();
@@ -573,7 +590,7 @@ void prepareScene(){
                                 Wall_rect mur;
                                 mur = Wall_rect(xl, yd, zb, dlugosc, wysokosc, szerokosc);
                                 mur.setAngle_vertical(0);
-                                mur.setTexture(TEXTURES[1]);
+                                mur.setTexture(TEXTURES_WALL[rand_wall_texture_id]);
                                 if (horizontal) mur.setAngle_horizontal(PI/2); else mur.setAngle_horizontal(0);
                                 obstacles_rect.push_back(mur);
                         }
@@ -585,17 +602,24 @@ void prepareScene(){
 
                         if (iss >> xl >> yd >> zb >> dlugosc >> wysokosc >> szerokosc) {
                                 //printf("xl = %lf, yd = %lf, zb = %lf, d = %lf, w = %lf, s = %lf\n", xl, yd, zb, dlugosc, wysokosc, szerokosc);
-
-                                float step = 5.0;
+                                /*
+                                float step = 8.0;
                                 for(short iw=0;iw<1+szerokosc/step;iw++) for(short il=0;il<1+dlugosc/step;il++){
                                         //printf("iw=%hd,  il=%hd\n", iw, il);
                                         Wall_rect podloga;
                                         podloga = Wall_rect(xl+step*il, yd, zb+step*iw, clamp(dlugosc-step*il, 0.0, 5.0), wysokosc, clamp(szerokosc-step*iw, 0.0, 5.0));
                                         podloga.setAngle_vertical(0);
                                         podloga.setAngle_horizontal(0);
-                                        podloga.setTexture(TEXTURES[1]);
+                                        podloga.setTexture(TEXTURES_FLOOR[rand_floor_texture_id]);
                                         obstacles_rect.push_back(podloga);
                                 }
+                                        */
+                                Wall_rect podloga;
+                                podloga = Wall_rect(xl, yd, zb, dlugosc, wysokosc, szerokosc);
+                                podloga.setAngle_vertical(0);
+                                podloga.setAngle_horizontal(0);
+                                podloga.setTexture(TEXTURES_FLOOR[rand_floor_texture_id]);
+                                obstacles_rect.push_back(podloga);
                         }
                 }
 
@@ -609,7 +633,7 @@ void prepareScene(){
 
                                 Ramp rampa = Ramp(glm::vec3(xl, yd, zb), dlugosc, wysokosc, szerokosc);
                                 if (!klatka) rampa.setAngle_horizontal(3*PI/2); else rampa.setAngle_horizontal(PI/2);
-                                rampa.setTexture(TEXTURES[1]);
+                                rampa.setTexture(TEXTURES_WALL[rand_wall_texture_id]);
                                 ramps.push_back(rampa);
                         }
                 }
@@ -667,16 +691,6 @@ void prepareScene(){
                 kraty.close();
                 duchy.close();
         }
-
-        Ghost g;
-        g.position=glm::vec3(5.0, 1.0, 5.0);
-        g.startingPosition=glm::vec3(5.0, 1.0, 5.0);
-        ghosts.push_back(g);
-
-        Door de(glm::vec3(-6.0, 0.0, 6.0), doorHeight);
-        de.setAngle_horizontal(0);
-        doors.push_back(de);
-
 
         for(unsigned int i=0;i<obstacles_rect.size();i++) OBSTACLES.push_back(&obstacles_rect[i]);
         for(unsigned int i=0;i<obstacles_tr.size();i++) OBSTACLES.push_back(&obstacles_tr[i]);
