@@ -182,23 +182,23 @@ void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float
         if (labyrinthNumber == 0)
             // Generowanie podłogi w wejściu na parterze
             podlogi << -(wallWidth * stairsRoomLength) << " " << labyrinthNumber * (wallHeight+floorThickness) - floorThickness << " " << 0 << " " 
-                << stairsRoomLength * wallWidth << " " << floorThickness << " " << stairsRoomWidth * wallWidth << endl;
+                << stairsRoomLength * wallWidth << " " << floorThickness << " " << stairsRoomWidth * wallWidth << " " << 0 << endl;
 
         if (labyrinthNumber % 2 != 0 && (labyrinthNumber + 1) != numberOfFloors) {
             // Generowanie filaru przy rampie
             podlogi << -(wallWidth * stairsRoomLength) << " " << labyrinthNumber * (wallHeight+floorThickness)  << " " << wallWidth << " " 
-                << wallWidth << " " << (wallHeight+floorThickness) << " " << wallWidth << endl;
+                << wallWidth << " " << (wallHeight+floorThickness) << " " << wallWidth << " " << 0 << endl;
 
             // Generowanie podłogi piętro wyżej w klatce schodowej
             podlogi << -(wallWidth * stairsRoomLength) << " " << (labyrinthNumber + 1) * (wallHeight+floorThickness) - floorThickness << " " << 0 << " " 
-                << wallWidth * stairsRoomLength << " " << floorThickness << " " << wallWidth << endl;
+                << wallWidth * stairsRoomLength << " " << floorThickness << " " << wallWidth << " " << 0 << endl;
 
             podlogi << -(wallWidth) << " " << (labyrinthNumber + 1) * (wallHeight+floorThickness) - floorThickness << " " << wallWidth << " "
-                << wallWidth << " " << floorThickness << " " << wallWidth << endl;
+                << wallWidth << " " << floorThickness << " " << wallWidth << " " << 0 << endl;
 
             // Generowanie podłogi w klatce schodowej jeśli generujemy rampę
             podlogi << -(wallWidth * stairsRoomLength) << " " << labyrinthNumber * (wallHeight+floorThickness) - floorThickness  << " " << 0 << " " 
-                << stairsRoomLength * wallWidth << " " << floorThickness << " " << stairsRoomWidth * wallWidth << endl;
+                << stairsRoomLength * wallWidth << " " << floorThickness << " " << stairsRoomWidth * wallWidth << " " << 0 << endl;
 
             // Generowanie rampy
             rampy << -(wallWidth * (stairsRoomWidth + 1)) << " " << labyrinthNumber * (wallHeight+floorThickness) << " " << wallWidth << " " 
@@ -208,14 +208,14 @@ void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float
         // Generowanie podłogi dla końca labiryntu
         if (labyrinthNumber % 2 != 0 && (labyrinthNumber + 1) == numberOfFloors) {
             podlogi << -(wallWidth * i) << " " << labyrinthNumber * (wallHeight+floorThickness) << " " << 0 << " " 
-                << i * wallWidth << " " << floorThickness << " " << i * wallWidth << endl;
+                << i * wallWidth << " " << floorThickness << " " << i * wallWidth << " " << 0 << endl;
         }
 
 
         // Generowanie dachu
         if ((labyrinthNumber + 1) == numberOfFloors) {
             podlogi << -(wallWidth * stairsRoomLength) << " " << (labyrinthNumber + 1) * (wallHeight+floorThickness) - floorThickness << " " << 0 << " " 
-                << stairsRoomLength * wallWidth << " " << floorThickness << " " << stairsRoomWidth * wallWidth << endl;
+                << stairsRoomLength * wallWidth << " " << floorThickness << " " << stairsRoomWidth * wallWidth << " " << 0 << endl;
         }
 
 
@@ -238,18 +238,18 @@ void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float
         if (labyrinthNumber % 2 == 0 && (labyrinthNumber + 1) != numberOfFloors) {
             // Generowanie filaru przy rampie
             podlogi << (szerokosc + (stairsRoomLength - 1)) * (wallWidth ) + wallLength << " " << labyrinthNumber * (wallHeight+floorThickness) << " " << ((wysokosc - stairsRoomWidth) * wallWidth) + wallLength
-                << " " << wallWidth << " " << (wallHeight+floorThickness) << " " << wallWidth << endl;
+                << " " << wallWidth << " " << (wallHeight+floorThickness) << " " << wallWidth << " " << 0 << endl;
 
             // Generowanie podłogi piętro wyżej w klatce schodowej
             podlogi << szerokosc * (wallWidth) << " " << (labyrinthNumber + 1) * (wallHeight+floorThickness) - floorThickness << " " << ((wysokosc - 1) * wallWidth) + wallLength
-                << " " << (wallWidth ) * stairsRoomLength << " " << floorThickness << " " << wallWidth << endl;  
+                << " " << (wallWidth ) * stairsRoomLength << " " << floorThickness << " " << wallWidth << " " << 0 << endl;  
                 
             podlogi << szerokosc * (wallWidth) << " " << (labyrinthNumber + 1) * (wallHeight+floorThickness) - floorThickness << " " << ((wysokosc - 2) * wallWidth) + wallLength
-                << " " << wallWidth  << " " << floorThickness << " " << wallWidth << endl;  
+                << " " << wallWidth  << " " << floorThickness << " " << wallWidth << " " << 0 << endl;  
                     
             // Generowanie podłogi w klatce schodowej jeśli generujemy rampę
             podlogi << szerokosc * (wallWidth) << " " << labyrinthNumber * (wallHeight+floorThickness) - floorThickness << " " << (wysokosc - stairsRoomWidth) * wallWidth 
-                << " " << stairsRoomLength * (wallWidth + wallLength) << " " << floorThickness << " " << stairsRoomWidth * wallWidth << endl;
+                << " " << stairsRoomLength * (wallWidth + wallLength) << " " << floorThickness << " " << stairsRoomWidth * wallWidth << " " << 0 << endl;
 
             // Generowanie rampy
             rampy << (szerokosc + 3) * (wallWidth) + wallLength << " " << labyrinthNumber * (wallHeight+floorThickness) << " " << (((wysokosc + 1) - stairsRoomWidth) * wallWidth) + wallLength
@@ -259,13 +259,13 @@ void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float
         // Generowanie podłogi dla końca labiryntu
         if (labyrinthNumber % 2 == 0 && (labyrinthNumber + 1) == numberOfFloors) {
             podlogi << szerokosc * (wallWidth) << " " << labyrinthNumber * (wallHeight+floorThickness) - floorThickness << " " << (wysokosc - stairsRoomWidth) * wallWidth 
-                << " " << stairsRoomLength * (wallWidth ) << " " << floorThickness << " " << stairsRoomWidth * wallWidth << endl;
+                << " " << stairsRoomLength * (wallWidth ) << " " << floorThickness << " " << stairsRoomWidth * wallWidth << " " << 0 << endl;
         }
 
         // Generowanie dachu
         if ((labyrinthNumber + 1) == numberOfFloors) {
             podlogi << szerokosc * (wallWidth) << " " << (labyrinthNumber + 1) * (wallHeight+floorThickness) - floorThickness << " " << (wysokosc - stairsRoomWidth) * wallWidth 
-                << " " << stairsRoomLength * (wallWidth ) << " " << floorThickness << " " << stairsRoomWidth * wallWidth << endl;
+                << " " << stairsRoomLength * (wallWidth ) << " " << floorThickness << " " << stairsRoomWidth * wallWidth << " " << 0 << endl;
         }
 
         // Generowanie podłóg i dachu w labiryncie
@@ -278,41 +278,41 @@ void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float
                     
                     // Generowanie kolumn, w celu wyeliminowania niedokładnych narożników labiryntu
                     if (x == szerokosc - 1){ // Wygeneruj kolumny w skrajnie dolnej ścianie
-                        sciany << wallLength << " " << labyrinthNumber * (wallHeight+ floorThickness) - floorThickness << " " 
+                        podlogi << wallLength << " " << labyrinthNumber * (wallHeight+ floorThickness) - floorThickness << " " 
                             << y * (wallWidth) << " " << wallLength << " " << floorThickness << " " << wallLength << " " << 1 << endl;
                     }
-                    sciany << k * (wallWidth) + wallLength << " " << labyrinthNumber * (wallHeight+ floorThickness) - floorThickness  << " " << y * (wallWidth) << " " << 
+                    podlogi << k * (wallWidth) + wallLength << " " << labyrinthNumber * (wallHeight+ floorThickness) - floorThickness  << " " << y * (wallWidth) << " " << 
                             wallLength << " " << floorThickness << " " << wallLength << " " << 1 << endl;
                     
                     // Ściany pioniowe z punktu widzenia obserwatora
 
-                        sciany << k * (wallWidth) << " " << labyrinthNumber * (wallHeight+ floorThickness) - floorThickness  << " " << y * wallWidth << " " << 
+                        podlogi << k * (wallWidth) << " " << labyrinthNumber * (wallHeight+ floorThickness) - floorThickness  << " " << y * wallWidth << " " << 
                             wallLength << " " << floorThickness << " " << wallWidth - wallLength << " " << 1 << endl;
                     
                     
                     // Ściany poziome
 
                         // Nie generuj ściany: wyjście z labiryntu 
-                        sciany << k * (wallWidth) << " " << labyrinthNumber * (wallHeight+ floorThickness) - floorThickness  << " " << y * wallWidth + wallLength << " " << 
+                        podlogi << k * (wallWidth) << " " << labyrinthNumber * (wallHeight+ floorThickness) - floorThickness  << " " << y * wallWidth + wallLength << " " << 
                             wallLength << " " << floorThickness << " " << wallWidth - wallLength << " " << 0 << endl;
                     
                     
                     // Skrajnie prawa ściana labirytnu
                     if (y == wysokosc - 1 && sciana[x][y][2]) {
-                        sciany << k * (wallWidth) << " " << labyrinthNumber * (wallHeight+ floorThickness) - floorThickness  << " " << (y + 1) * wallWidth << " "
+                        podlogi << k * (wallWidth) << " " << labyrinthNumber * (wallHeight+ floorThickness) - floorThickness  << " " << (y + 1) * wallWidth << " "
                             << wallLength << " " << floorThickness << " " << (wallWidth - wallLength) << " " << 1 << endl;
                         //KOLUMNY w celu poprawnego cieniowania
-                        sciany << k * (wallWidth) + wallLength << " " << labyrinthNumber * (wallHeight+ floorThickness) - floorThickness << " " << (y + 1) * wallWidth << " "
+                        podlogi << k * (wallWidth) + wallLength << " " << labyrinthNumber * (wallHeight+ floorThickness) - floorThickness << " " << (y + 1) * wallWidth << " "
                             << wallLength << " " << floorThickness << " " << (wallLength) << " " << 1 << endl; 
                     }
                     
                     // Skrajnie dolna
                     if (x == szerokosc - 1 && sciana[x][y][1]) {
-                        sciany << (k * (wallLength + wallWidth)) - wallLength - wallWidth<< " "  << labyrinthNumber * (wallHeight+ floorThickness) - floorThickness  << " "  << y * wallWidth + wallLength
+                        podlogi << (k * (wallLength + wallWidth)) - wallLength - wallWidth<< " "  << labyrinthNumber * (wallHeight+ floorThickness) - floorThickness  << " "  << y * wallWidth + wallLength
                             << " " << wallLength << " " << floorThickness << " " << wallWidth - wallLength << " " << 0 << endl;
                     }
                     // podłoga między ścianami
-                    sciany << k * (wallWidth) << " " << labyrinthNumber * (wallHeight+ floorThickness) - floorThickness  << " " << y * (wallWidth) + wallLength << " " << 
+                    podlogi << k * (wallWidth) << " " << labyrinthNumber * (wallHeight+ floorThickness) - floorThickness  << " " << y * (wallWidth) + wallLength << " " << 
                             wallWidth - wallLength << " " << floorThickness << " " << wallWidth - wallLength << " " << 1 << endl;
                     k++;
                 }

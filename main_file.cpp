@@ -553,7 +553,7 @@ void freeOpenGLProgram(GLFWwindow* window) {
 void prepareMoveables(){
         obserwator.setRadius(0.02);
         obserwator.setPosition(-4, 1, 4);
-        obserwator.setVelocity_value(10);
+        obserwator.setVelocity_value(7.0);
 }
 void prepareScene(){
         torches.resize(numberOfFloors);
@@ -599,27 +599,29 @@ void prepareScene(){
                 while (getline(podlogi, line)) {
                         istringstream iss(line);
                         float xl, yd, zb, dlugosc, wysokosc, szerokosc;
+                        bool obrot;
 
-                        if (iss >> xl >> yd >> zb >> dlugosc >> wysokosc >> szerokosc) {
-                                //printf("xl = %lf, yd = %lf, zb = %lf, d = %lf, w = %lf, s = %lf\n", xl, yd, zb, dlugosc, wysokosc, szerokosc);
-                                /*
+                        if (iss >> xl >> yd >> zb >> dlugosc >> wysokosc >> szerokosc >> obrot){
+                                
                                 float step = 8.0;
-                                for(short iw=0;iw<1+szerokosc/step;iw++) for(short il=0;il<1+dlugosc/step;il++){
+                                for(short iw=0;iw<1+szerokosc/step;iw++) for(short il=0;il<1+dlugosc/step;il++){ // fragmentator zbyt dużych kawałków podłogi
                                         //printf("iw=%hd,  il=%hd\n", iw, il);
                                         Wall_rect podloga;
-                                        podloga = Wall_rect(xl+step*il, yd, zb+step*iw, clamp(dlugosc-step*il, 0.0, 5.0), wysokosc, clamp(szerokosc-step*iw, 0.0, 5.0));
+                                        podloga = Wall_rect(xl+step*il, yd, zb+step*iw, clamp(dlugosc-step*il, 0.0, step), wysokosc, clamp(szerokosc-step*iw, 0.0, step));
                                         podloga.setAngle_vertical(0);
-                                        podloga.setAngle_horizontal(0);
+                                        if(!obrot) podloga.setAngle_horizontal(0); else podloga.setAngle_horizontal(PI/2);
                                         podloga.setTexture(TEXTURES_FLOOR[rand_floor_texture_id]);
                                         obstacles_rect.push_back(podloga);
                                 }
-                                        */
+                                        
+                                /*
                                 Wall_rect podloga;
                                 podloga = Wall_rect(xl, yd, zb, dlugosc, wysokosc, szerokosc);
                                 podloga.setAngle_vertical(0);
-                                podloga.setAngle_horizontal(0);
+                                if(!obrot) podloga.setAngle_horizontal(0); else podloga.setAngle_horizontal(PI/2);
                                 podloga.setTexture(TEXTURES_FLOOR[rand_floor_texture_id]);
                                 obstacles_rect.push_back(podloga);
+                                */
                         }
                 }
 
