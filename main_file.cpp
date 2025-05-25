@@ -37,7 +37,8 @@ MovePhase currentPhase = MovePhase::Left;
 float speed = 10.0f;
 float traveled = 0.0f;
 float totalTraveled = 0.0f;
-float wwidth, wlength, lheight, lwidth;
+float wWidth, wLength, lHeight, lWidth;
+float delta = 0.15f;
 
 struct Ghost {
         glm::vec3 startingPosition;
@@ -131,7 +132,7 @@ void move_ghost(float deltaTime) {
                                 ghosts[i].position += glm::vec3(0.0f, 0.0f, -movement); 
                         }
                         traveled += movement;
-                        if (traveled > (wwidth * lheight + 3)) {
+                        if (traveled >= (wWidth * lHeight + (wLength * 5))) {
                                 currentPhase = MovePhase::Up_Left;
                                 for (int i = 0; i < ghosts.size(); i++) ghosts[i].phase = MovePhase::Up_Left;
                                 traveled = 0;
@@ -143,7 +144,7 @@ void move_ghost(float deltaTime) {
                         }
                         traveled += movement;
                         totalTraveled += movement;
-                        if (traveled > wwidth) {
+                        if (traveled + delta >= wWidth) {
                                 currentPhase = MovePhase::Right;
                                 for (int i = 0; i < ghosts.size(); i++) ghosts[i].phase = MovePhase::Right;
                                 traveled = 0;
@@ -154,7 +155,7 @@ void move_ghost(float deltaTime) {
                                 ghosts[i].position += glm::vec3(0.0f, 0.0f, movement); 
                         }
                         traveled += movement;
-                        if (traveled > wwidth * lheight + 3) {
+                        if (traveled >= wWidth * lHeight + (wLength * 5)) {
                                 currentPhase = MovePhase::Up_Right;
                                 for (int i = 0; i < ghosts.size(); i++) ghosts[i].phase = MovePhase::Up_Right;
                                 traveled = 0;
@@ -166,7 +167,7 @@ void move_ghost(float deltaTime) {
                         }
                         traveled += movement;
                         totalTraveled += movement;
-                        if (traveled > wwidth) {
+                        if (traveled + delta >= wWidth) {
                                 currentPhase = MovePhase::Left;
                                 for (int i = 0; i < ghosts.size(); i++) ghosts[i].phase = MovePhase::Left;
                                 traveled = 0;
@@ -174,7 +175,7 @@ void move_ghost(float deltaTime) {
                         break;
         }
 
-        if (totalTraveled > wwidth * lwidth) {
+        if (totalTraveled > wWidth * lWidth) {
                 for (int i = 0; i < ghosts.size(); i++) {
                         ghosts[i].position = ghosts[i].startingPosition;
                         ghosts[i].phase = MovePhase::Left;
@@ -560,7 +561,7 @@ void prepareScene(){
         int labyrinthHeight = 10, labyrinthWidth = 10;
         float wallLength = 1.0f, wallWidth = 7.0f;
 
-        wlength = wallLength; wwidth = wallWidth; lheight = labyrinthHeight; lwidth = labyrinthWidth;
+        wLength = wallLength; wWidth = wallWidth; lHeight = labyrinthHeight; lWidth = labyrinthWidth;
         
         for (int i = 0; i < numberOfFloors; i++) {
                 srand(std::chrono::high_resolution_clock::now().time_since_epoch().count() + i * 1337);
@@ -780,7 +781,7 @@ int main(void){
 
                 drawScene(window, dt); //Wykonaj procedurę rysującą
                 glfwPollEvents(); //Wykonaj procedury callback w zalezności od zdarzeń jakie zaszły.
-                //if(cursor_centred) printf("pos= %f %f %f\n", obserwator.getPosition().x, obserwator.getPosition().y, obserwator.getPosition().z);
+                // if(cursor_centred) printf("pos= %f %f %f\n", obserwator.getPosition().x, obserwator.getPosition().y, obserwator.getPosition().z);
 
                 move_ghost(dt);
 

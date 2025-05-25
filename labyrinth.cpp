@@ -417,7 +417,7 @@ void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float
             }
         }
 
-        duchy << wallWidth / 2 + wallLength << " " << labyrinthNumber * (wallHeight + floorThickness) + (wallHeight / 2) << " " << wysokosc * wallWidth + wallLength << endl;
+        duchy << wallWidth / 2.0 + wallLength << " " << labyrinthNumber * (wallHeight + floorThickness) + (wallHeight / 2.0) << " " << wysokosc * wallWidth + (wallLength * 3) << endl;
         
         sciany.close();
         podlogi.close();
