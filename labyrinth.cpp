@@ -195,7 +195,7 @@ void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float
         }
 
         // Generowanie podłogi, jeżeli w wejściowej klatce schodowej jest rampa
-        if (labyrinthNumber % 2 == 0) {
+        if (labyrinthNumber % 2 == 0 && labyrinthNumber != 0) {
             // Generowanie podłóg
             podlogi << -(wallWidth * stairsRoomLength) << " " << labyrinthNumber  * (wallHeight+floorThickness) - floorThickness << " " << 0 << " " 
                 << wallWidth * stairsRoomLength << " " << floorThickness << " " << wallWidth << " " << 0 << endl;
