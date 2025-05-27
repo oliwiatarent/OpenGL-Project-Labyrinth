@@ -46,6 +46,11 @@ struct Ghost {
         MovePhase phase = MovePhase::Left;
 };
 
+struct Treasure {
+        glm::vec3 position;
+        bool rotate;
+};
+
 
 using namespace std;
 
@@ -77,6 +82,7 @@ std::vector<Wall_trian> obstacles_tr;
 std::vector<Ramp> ramps;
 std::vector<Obstacle*> OBSTACLES;
 std::vector<struct Ghost> ghosts;
+Treasure treasure;
 Wall_creator wall_creator;
 Observer obserwator;
 
@@ -184,6 +190,22 @@ void move_ghost(float deltaTime) {
                 totalTraveled = 0.0f;
                 traveled = 0;
         }
+}
+
+void draw_treasure() {
+        glm::mat4 M = glm::mat4(1.0f);
+        M = glm::translate(M, treasure.position);
+        M = glm::scale(M, glm::vec3(0.7f));
+        M = glm::rotate(M, -PI/2, glm::vec3(1.0f, 0.0f, 0.0f));
+
+        if (treasure.rotate)
+                M = glm::rotate(M, PI/2, glm::vec3(0.0f, 0.0f, 1.0f));
+        else
+                M = glm::rotate(M, -PI/2, glm::vec3(0.0f, 0.0f, 1.0f));
+
+        glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(M));
+
+        Models::treasure.Draw(*spLambert);
 }
 
 bool porownaj_odleglosci(glm::vec3 p1, glm::vec3 p2){
@@ -551,7 +573,9 @@ void initOpenGLProgram(GLFWwindow* window) {
         Models::loadSpider();
         Models::loadGhost();
         Models::loadDoor();
+        Models::loadTreasure();
 }
+
 void freeOpenGLProgram(GLFWwindow* window) {
         freeShaders();
         //************Tutaj umieszczaj kod, który należy wykonać po zakończeniu pętli głównej************
@@ -703,6 +727,20 @@ void prepareScene(){
                 duchy.close();
         }
 
+        ifstream skarb("input/skarb.txt");
+        string line;
+        while (getline(skarb, line)) {
+                istringstream iss(line);
+                float x, y, z;
+                bool rotate;
+
+                if (iss >> x >> y >> z >> rotate) {
+                        treasure.position = glm::vec3(x, y, z);
+                        treasure.rotate = rotate;
+                }
+        }
+        skarb.close();
+
         for(unsigned int i=0;i<obstacles_rect.size();i++) OBSTACLES.push_back(&obstacles_rect[i]);
         for(unsigned int i=0;i<obstacles_tr.size();i++) OBSTACLES.push_back(&obstacles_tr[i]);
         for(unsigned int i=0;i<ramps.size();i++) OBSTACLES.push_back(&ramps[i]);
@@ -741,7 +779,7 @@ void drawScene(GLFWwindow* window, float dt){
         }
         if(wall_creator.is_creating_wall) wall_creator.current_wall->draw(P, V, spLambertSun);
 
-        
+        draw_treasure();
         
         glfwSwapBuffers(window); //Skopiuj bufor tylny do bufora przedniego
 }

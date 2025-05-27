@@ -149,14 +149,14 @@ void Labyrinth::print() {
 }
 
 void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float wallHeight, float wallWidth, float floorThickness, float doorWidth, unsigned short liczba_pochodni){
-        ofstream sciany, podlogi, rampy, dachy, pochodnie, kraty, duchy;
+        ofstream sciany, podlogi, rampy, dachy, pochodnie, kraty, duchy, skarb;
         sciany.open("input/labyrinth_" + to_string(labyrinthNumber) + ".txt");
         podlogi.open("input/floors_" + to_string(labyrinthNumber) + ".txt");
         rampy.open("input/rampy_" + to_string(labyrinthNumber) + ".txt");
         pochodnie.open("input/pochodnie_"+to_string(labyrinthNumber)+".txt");
         kraty.open("input/kraty_"+to_string(labyrinthNumber)+".txt");
         duchy.open("input/duchy_" + to_string(labyrinthNumber) + ".txt");
-
+        skarb.open("input/skarb.txt");
 
         //float floorThickness = 2.0f;
         int stairsRoomLength = 4, stairsRoomWidth = 2;
@@ -213,6 +213,8 @@ void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float
         if (labyrinthNumber % 2 != 0 && (labyrinthNumber + 1) == numberOfFloors) {
             podlogi << -(wallWidth * stairsRoomLength) << " " << labyrinthNumber * (wallHeight+floorThickness) - floorThickness << " " << 0 << " " 
                 << stairsRoomLength * wallWidth << " " << floorThickness << " " << stairsRoomWidth * wallWidth << " " << 0 << endl;
+
+            skarb << -(wallWidth * stairsRoomLength) / 2 << " " << labyrinthNumber * (wallHeight+floorThickness) + 0.5 << " " << (stairsRoomWidth * (wallWidth + wallLength)) / 2 << " " << 1 << endl;
         }
 
 
@@ -267,6 +269,8 @@ void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float
         if (labyrinthNumber % 2 == 0 && (labyrinthNumber + 1) == numberOfFloors) {
             podlogi << szerokosc * (wallWidth) << " " << labyrinthNumber * (wallHeight+floorThickness) - floorThickness << " " << (wysokosc - stairsRoomWidth) * wallWidth 
                 << " " << stairsRoomLength * (wallWidth ) << " " << floorThickness << " " << stairsRoomWidth * wallWidth << " " << 0 << endl;
+
+            skarb << szerokosc * (wallWidth) + (wallWidth * stairsRoomLength / 2) << " " << labyrinthNumber * (wallHeight+floorThickness) + 0.5 << " " << (wysokosc - stairsRoomWidth / 2) * wallWidth << " " << 0 << endl;
         }
 
         // Generowanie dachu
@@ -432,6 +436,7 @@ void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float
         pochodnie.close();
         kraty.close();
         duchy.close();
+        skarb.close();
 }
 
 
