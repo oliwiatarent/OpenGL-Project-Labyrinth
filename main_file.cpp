@@ -519,19 +519,27 @@ void initOpenGLProgram(GLFWwindow* window) {
         glfwSetCursorPos(window, screenwidth/2, screenheight/2);
 
         //TEXTURES.push_back(readTexture("assests/textures/drewno.png"));
-        TEXTURES_WALL.push_back(readTexture("assests/textures/marble.png"));
-        TEXTURES_FLOOR.push_back(readTexture("assests/textures/rock.png"));
-        TEXTURES_WALL.push_back(readTexture("assests/textures/bricks_02.png"));
-        TEXTURES_WALL.push_back(readTexture("assests/textures/bricks.png"));
-        TEXTURES_WALL.push_back(readTexture("assests/textures/cobblestone.png"));
-        //TEXTURES_FLOOR.push_back(readTexture("assests/textures/deski.png"));
-        TEXTURES_FLOOR.push_back(readTexture("assests/textures/dirt.png"));
-        TEXTURES_WALL.push_back(readTexture("assests/textures/ground_01.png"));
-        TEXTURES_WALL.push_back(readTexture("assests/textures/ground_02.png"));
-        TEXTURES_FLOOR.push_back(readTexture("assests/textures/ground_03.png"));
-        TEXTURES_FLOOR.push_back(readTexture("assests/textures/ground_04.png"));
-        TEXTURES_WALL.push_back(readTexture("assests/textures/stone-wall.png"));
-        TEXTURES_FLOOR.push_back(readTexture("assests/textures/wood.png"));
+        TEXTURES_WALL.push_back(readTexture("assests/textures/walls/bricks.png"));
+        TEXTURES_WALL.push_back(readTexture("assests/textures/walls/bricks_02.png"));
+        TEXTURES_WALL.push_back(readTexture("assests/textures/walls/bricks_03.png"));
+        TEXTURES_WALL.push_back(readTexture("assests/textures/walls/bricks_04.png"));
+        TEXTURES_WALL.push_back(readTexture("assests/textures/walls/stone_wall_01.png"));
+        TEXTURES_WALL.push_back(readTexture("assests/textures/walls/stone_wall_02.png"));
+        TEXTURES_WALL.push_back(readTexture("assests/textures/walls/stone_tiles.png"));
+        TEXTURES_WALL.push_back(readTexture("assests/textures/walls/marble.png"));
+        TEXTURES_WALL.push_back(readTexture("assests/textures/walls/cobblestone.png"));
+        TEXTURES_WALL.push_back(readTexture("assests/textures/walls/rocks.png"));
+        
+        //TEXTURES_FLOOR.push_back(readTexture("assests/textures/floors/deski.png"));
+        TEXTURES_FLOOR.push_back(readTexture("assests/textures/floors/ground_01.png"));
+        TEXTURES_FLOOR.push_back(readTexture("assests/textures/floors/ground_02.png"));
+        TEXTURES_FLOOR.push_back(readTexture("assests/textures/floors/bricks_01.png"));
+        TEXTURES_FLOOR.push_back(readTexture("assests/textures/floors/bricks_02.png"));
+        TEXTURES_FLOOR.push_back(readTexture("assests/textures/floors/ground_square.png"));
+        TEXTURES_FLOOR.push_back(readTexture("assests/textures/floors/rock.png"));
+        TEXTURES_FLOOR.push_back(readTexture("assests/textures/floors/dirt.png"));
+        TEXTURES_FLOOR.push_back(readTexture("assests/textures/floors/wood.png"));
+        TEXTURES_FLOOR.push_back(readTexture("assests/textures/floors/tiles.png"));
 
 
         wall_creator.assign_next_texture(TEXTURES_WALL);
