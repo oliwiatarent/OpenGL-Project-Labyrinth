@@ -124,9 +124,9 @@ void draw_ghost(Ghost ghost) {
         else if (ghost.phase == MovePhase::Up_Left || ghost.phase == MovePhase::Up_Right)     
                 M = glm::rotate(M, PI/2, glm::vec3(0.0f, 1.0f, 0.0f));
 
-        glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(M));
+        glUniformMatrix4fv(spTextured->u("M"), 1, false, glm::value_ptr(M));
 
-        Models::ghost.Draw(*spLambert);
+        Models::ghost.Draw(*spTextured);
 }
 
 void move_ghost(float deltaTime) {
@@ -203,9 +203,9 @@ void draw_treasure() {
         else
                 M = glm::rotate(M, -PI/2, glm::vec3(0.0f, 0.0f, 1.0f));
 
-        glUniformMatrix4fv(spLambert->u("M"), 1, false, glm::value_ptr(M));
+        glUniformMatrix4fv(spTextured->u("M"), 1, false, glm::value_ptr(M));
 
-        Models::treasure.Draw(*spLambert);
+        Models::treasure.Draw(*spTextured);
 }
 
 bool porownaj_odleglosci(glm::vec3 p1, glm::vec3 p2){

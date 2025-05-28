@@ -1,21 +1,18 @@
-#version 330
+#version 330 core
 
-//Zmienne jednorodne
-uniform mat4 P;
-uniform mat4 V;
+// Uniforms
+uniform mat4 P; 
+uniform mat4 V; 
 uniform mat4 M;
 
+// Atrybuty
+layout (location = 0) in vec3 vertex;    
+layout (location = 1) in vec3 normal;  
+layout (location = 2) in vec2 texCoords;
 
+out vec2 i_tex;
 
-//Atrybuty
-layout (location=0) in vec4 vertex; //wspolrzedne wierzcholka w przestrzeni modelu
-layout (location=2) in vec2 texCoord; //wspó³rzêdne teksturowania
-
-
-//Zmienne interpolowane
-out vec2 i_tc;
-
-void main(void) {
-    gl_Position=P*V*M*vertex;
-    i_tc=texCoord;
+void main() {
+    gl_Position = P * V * M * vec4(vertex, 1.0);
+    i_tex = texCoords;
 }

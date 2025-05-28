@@ -47,12 +47,13 @@ void Mesh::Draw(ShaderProgram& shader)
         // retrieve texture number (the N in diffuse_textureN)
         string number;
         string name = textures[i].type;
-        if (name == "texture_diffuse")
+        if (name == "diffuse")
             number = std::to_string(diffuseNr++);
-        else if (name == "texture_specular")
+        else if (name == "specular")
             number = std::to_string(specularNr++);
 
         shader.setInt(("material_" + name + number).c_str(), i);
+
         glBindTexture(GL_TEXTURE_2D, textures[i].id);
     }
     glActiveTexture(GL_TEXTURE0);
@@ -146,12 +147,12 @@ Mesh ExternalModel::processMesh(aiMesh* mesh, const aiScene* scene)
         if (mesh->mMaterialIndex >= 0)
         {
             aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-            vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "material_diffuse");
+            vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "diffuse");
             textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-            vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "material_specular");
-            textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-            vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "material_normal");
-            textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
+            // vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "specular");
+            // textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+            // vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "normal");
+            // textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
             // vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height");
             // textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
         }
