@@ -30,5 +30,6 @@ Place, Fifth Floor, Boston, MA  02110 - 1301  USA
 #include "ghost/ghost.h"
 #include "door/door.h"
 #include "treasure/treasure.h"
+#include "painting/painting.h"
 
 #endif

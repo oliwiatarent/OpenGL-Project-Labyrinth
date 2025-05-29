@@ -149,13 +149,14 @@ void Labyrinth::print() {
 }
 
 void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float wallHeight, float wallWidth, float floorThickness, float doorWidth, unsigned short liczba_pochodni){
-        ofstream sciany, podlogi, rampy, dachy, pochodnie, kraty, duchy, skarb;
+        ofstream sciany, podlogi, rampy, dachy, pochodnie, kraty, duchy, skarb, obrazy;
         sciany.open("input/labyrinth_" + to_string(labyrinthNumber) + ".txt");
         podlogi.open("input/floors_" + to_string(labyrinthNumber) + ".txt");
         rampy.open("input/rampy_" + to_string(labyrinthNumber) + ".txt");
         pochodnie.open("input/pochodnie_"+to_string(labyrinthNumber)+".txt");
         kraty.open("input/kraty_"+to_string(labyrinthNumber)+".txt");
         duchy.open("input/duchy_" + to_string(labyrinthNumber) + ".txt");
+        obrazy.open("input/obrazy_" + to_string(labyrinthNumber) + ".txt");
         skarb.open("input/skarb.txt");
 
         //float floorThickness = 2.0f;
@@ -403,19 +404,19 @@ void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float
             }
         }
 
-        bool krata[szerokosc][wysokosc] = { false };
-        for(int i = 0; i < numberOfFloors*10;i++) {
-            int x = rand() % (szerokosc-1), y = rand() % (wysokosc-1);
+        bool siatka[szerokosc][wysokosc] = { false };
+        for(unsigned short i = 0; i < numberOfFloors*10;i++) {
+            unsigned short x = rand() % (szerokosc-1), y = rand() % (wysokosc-1);
 
-            if(!sciana[x][y][1] && sciana[x][y][2] && sciana[x][y][0] && !sciana[x][y][3] && !krata[x][y]){
+            if(!sciana[x][y][1] && sciana[x][y][2] && sciana[x][y][0] && !sciana[x][y][3] && !siatka[x][y]){
                 i++;
                 kraty << (szerokosc - x - 1) * (wallWidth) + (wallWidth / 2) << " " << (labyrinthNumber * wallHeight) + (wallHeight / 2) + (floorThickness * labyrinthNumber) << " " <<  y * (wallWidth) + (wallWidth / 2) + (wallLength / 2) << " " << 0 << endl;
-                krata[x][y] = true;
+                siatka[x][y] = true;
             }
-            else if (sciana[x][y][1] && !sciana[x][y][2] && !sciana[x][y][0] && sciana[x][y][3] && !krata[x][y]) {
+            else if (sciana[x][y][1] && !sciana[x][y][2] && !sciana[x][y][0] && sciana[x][y][3] && !siatka[x][y]) {
                 i++;
                 kraty << (szerokosc - x - 1) * (wallWidth) + wallLength + (wallWidth - wallLength - doorWidth)/2 << " " << (labyrinthNumber * wallHeight) + (floorThickness * labyrinthNumber) << " " <<  y * (wallWidth) + (wallWidth / 2) + (wallLength / 2) << " " << 1 << endl;
-                krata[x][y] = true;
+                siatka[x][y] = true;
 
                 sciany << (szerokosc - x - 1) * (wallWidth) + wallLength + (wallWidth - wallLength - doorWidth)/2 << " " << (labyrinthNumber * wallHeight) + (floorThickness * labyrinthNumber) << " " <<  y * (wallWidth) + (wallWidth / 2) + (wallLength / 2) << " "
                     << doorWidth*1.5/10.0  << " " << doorWidth*1.5 << " " << (wallWidth - wallLength - doorWidth)/2 << " " << 1 << endl;
@@ -428,6 +429,32 @@ void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float
             }
         }
 
+        for (unsigned short i = 0; i < numberOfFloors * 10; i++) {
+            unsigned short x = rand() % (szerokosc-1), y = rand() % (wysokosc-1), s = rand() % 4;
+
+            if (s == 0 && sciana[x][y][0] && !siatka[x][y]) {
+                i++;
+                obrazy << (szerokosc - x - 1) * wallWidth + (wallWidth / 2) << " " 
+                    << labyrinthNumber * (wallHeight + floorThickness) + (wallHeight / 2) << " " << y * (wallWidth) + wallLength + 0.25 << " " << 0 << endl;
+                siatka[x][y] = true;
+            } else if (s == 1 && sciana[x][y][1] && !siatka[x][y]) {
+                i++;
+                obrazy << (szerokosc - x - 1) * wallWidth + wallLength + 0.25 << " " 
+                    << labyrinthNumber * (wallHeight + floorThickness) + (wallHeight / 2) << " " << y * (wallWidth) + (wallWidth / 2) << " " << 1 << endl;
+                siatka[x][y] = true;
+            } else if (s == 2 && sciana[x][y][2] && !siatka[x][y]) {
+                i++;
+                obrazy << (szerokosc - x - 1) * wallWidth + (wallWidth / 2) << " " 
+                    << labyrinthNumber * (wallHeight + floorThickness) + (wallHeight / 2) << " " << (y + 1) * (wallWidth) - 0.25 << " " << 2 << endl;
+                siatka[x][y] = true;
+            } else if (s == 3 && sciana[x][y][3] && !siatka[x][y]) {
+                i++;
+                obrazy << (szerokosc - x) * wallWidth - 0.25  << " " 
+                    << labyrinthNumber * (wallHeight + floorThickness) + (wallHeight / 2) << " " << y * (wallWidth) + (wallWidth / 2) << " " << 3 << endl;
+                siatka[x][y] = true;
+            }
+        }
+
         duchy << wallWidth / 2.0 + wallLength << " " << labyrinthNumber * (wallHeight + floorThickness) + (wallHeight / 2.0) << " " << wysokosc * wallWidth + (wallLength * 3) << endl;
         
         sciany.close();
@@ -436,6 +463,7 @@ void Labyrinth::generateCoordinates(int labyrinthNumber, float wallLength, float
         pochodnie.close();
         kraty.close();
         duchy.close();
+        obrazy.close();
         skarb.close();
 }
 

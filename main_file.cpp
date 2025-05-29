@@ -51,6 +51,11 @@ struct Treasure {
         bool rotate;
 };
 
+struct Painting {
+        glm::vec3 position;
+        short unsigned facing;
+};
+
 
 using namespace std;
 
@@ -82,6 +87,7 @@ std::vector<Wall_trian> obstacles_tr;
 std::vector<Ramp> ramps;
 std::vector<Obstacle*> OBSTACLES;
 std::vector<struct Ghost> ghosts;
+std::vector<struct Painting> paintings;
 Treasure treasure;
 Wall_creator wall_creator;
 Observer obserwator;
@@ -206,6 +212,30 @@ void draw_treasure() {
         glUniformMatrix4fv(spTextured->u("M"), 1, false, glm::value_ptr(M));
 
         Models::treasure.Draw(*spTextured);
+}
+
+void draw_painting(Painting painting) {
+        glm::mat4 M = glm::mat4(1.0f);
+        M = glm::translate(M, painting.position);
+        M = glm::rotate(M, PI/2, glm::vec3(0.0f, 0.0f, 1.0f));
+
+        if (painting.facing == 0) {
+                M = glm::rotate(M, PI/2, glm::vec3(1.0f, 0.0f, 0.0f));
+        }
+
+        if (painting.facing == 1) {
+                M = glm::rotate(M, PI, glm::vec3(1.0f, 0.0f, 0.0f));
+        }
+
+        if (painting.facing == 2) {
+                M = glm::rotate(M, -PI/2, glm::vec3(1.0f, 0.0f, 0.0f));
+        }
+
+
+        M = glm::scale(M, glm::vec3(1.5f));
+
+        glUniformMatrix4fv(spTextured->u("M"), 1, false, glm::value_ptr(M));
+        Models::painting.Draw(*spTextured);
 }
 
 bool porownaj_odleglosci(glm::vec3 p1, glm::vec3 p2){
@@ -574,6 +604,7 @@ void initOpenGLProgram(GLFWwindow* window) {
         Models::loadGhost();
         Models::loadDoor();
         Models::loadTreasure();
+        Models::loadPainting();
 }
 
 void freeOpenGLProgram(GLFWwindow* window) {
@@ -610,6 +641,7 @@ void prepareScene(){
                 ifstream pochodnie("input/pochodnie_"+ to_string(i) + ".txt");
                 ifstream kraty("input/kraty_"+ to_string(i) + ".txt");
                 ifstream duchy("input/duchy_"+ to_string(i) + ".txt");
+                ifstream obrazy("input/obrazy_"+ to_string(i) + ".txt");
                 string line;
 
                 while (getline(sciany, line)) {
@@ -717,6 +749,19 @@ void prepareScene(){
                                 ghosts.push_back(ghost);
                         }
                 }
+
+                while (getline(obrazy, line)) {
+                        istringstream iss(line);
+                        float x, y, z;
+                        short unsigned facing;
+
+                        if (iss >> x >> y >> z >> facing) {
+                                Painting painting;
+                                painting.position = glm::vec3(x, y, z);
+                                painting.facing = facing;
+                                paintings.push_back(painting);
+                        }
+                }
                 
 
                 sciany.close();
@@ -725,6 +770,7 @@ void prepareScene(){
                 pochodnie.close();
                 kraty.close();
                 duchy.close();
+                obrazy.close();
         }
 
         ifstream skarb("input/skarb.txt");
@@ -764,6 +810,9 @@ void drawScene(GLFWwindow* window, float dt){
         }
         for (int i = 0; i < ghosts.size(); i++) {
                 draw_ghost(ghosts[i]);
+        }
+        for (int i = 0; i < paintings.size(); i++) {
+                draw_painting(paintings[i]);
         }
 
 
