@@ -500,6 +500,24 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
                         doors[selectedIndex].open_close();
                         return;
                 }
+
+                selectedIndex = -1;
+                closestT = 1e9;
+                for (int i = 0; i < paintings.size(); ++i) {
+                        float t;
+                        if (paintings[i].is_clicked_on(obserwator.getCameraPosition(), obserwator.getCameraViewVector(), t)) {
+                                if (t < closestT) {
+                                        closestT = t;
+                                        selectedIndex = i;
+                                }
+                        }
+                }
+
+                if(selectedIndex!=-1){
+                        if (!paintings[selectedIndex].getOnFloor()) {}
+                                paintings[selectedIndex].change_height(wallHeight / 2);
+                        return;
+                }
         }
 }
 GLuint readTexture(const char* scianyname) {
@@ -859,6 +877,7 @@ int main(void){
 
                 for(unsigned short i=0;i<fences.size();i++) fences[i].move(dt);
                 for(unsigned short i=0;i<doors.size();i++) doors[i].move(dt);
+                for(unsigned short i=0;i<paintings.size();i++) paintings[i].move(dt);
         }
 
         freeOpenGLProgram(window);

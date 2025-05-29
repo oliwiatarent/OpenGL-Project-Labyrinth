@@ -224,9 +224,10 @@ class Door : public Obstacle_rect{
 class Painting : public Obstacle_rect{
     protected:
         float final_height; 
-        static constexpr float velocity_value = 1.0;
+        static constexpr float velocity_value = 8.0;
         volatile bool is_moving = false;
         short unsigned facing;
+        bool on_floor = false;
         
     public:
         Painting();
@@ -235,9 +236,14 @@ class Painting : public Obstacle_rect{
         void setAngle_horizontal(float alpha);
         void setAngle_vertical(float alpha);
         void draw(glm::mat4 P, glm::mat4 V, ShaderProgram* s_p); // metoda rysująca
+        // bool is_within(glm::vec3 punkt, float radius); // metoda sprawdzająca, czy jakikolwiek punkt w odległości 'radius' od 'punkt' znajduje się wewnątrz bryły
 
         glm::vec3 getPosition();
         short unsigned getFacing();
+        bool getOnFloor();
+        bool is_clicked_on(const glm::vec3& rayOrigin, const glm::vec3& rayDir, float& t);
+        void change_height(float dh);
+        void move(float T);
 };
 
 #endif

@@ -937,6 +937,7 @@ Painting::Painting(glm::vec3 position, unsigned short facing) {
     l = 0.5;
     w = 5.0;
     h = 3.0;
+    final_height = DBL.y;
     angle_horizontal = 0.0;
     angle_vertical = 0.0;  
 }
@@ -981,6 +982,43 @@ glm::vec3 Painting::getPosition(){
 
 short unsigned Painting::getFacing(){
     return facing;
+}
+
+bool Painting::getOnFloor() {
+    return on_floor;
+}
+
+bool Painting::is_clicked_on(const glm::vec3& rayOrigin, const glm::vec3& rayDir, float& t){
+    glm::vec3 boxMin = getPosition();
+    glm::vec3 boxMax = getPosition();
+
+    boxMax.x += l * cos(-angle_horizontal) + w * sin(-angle_horizontal);
+    boxMax.y += h;
+    boxMax.z += w * cos(angle_horizontal) + l * sin(angle_horizontal);
+
+    if(boxMax.x  < boxMin.x) std::swap(boxMax.x, boxMin.x);
+    if(boxMax.y  < boxMin.y) std::swap(boxMax.y, boxMin.y);
+    if(boxMax.z  < boxMin.z) std::swap(boxMax.z, boxMin.z);
+
+    return Obstacle_rect::rayIntersectsAABB(rayOrigin, rayDir, boxMin, boxMax, t);
+}
+
+void Painting::change_height(float dh){
+    if (!on_floor) {
+        is_moving = true;
+        final_height -= dh;
+        on_floor = true;
+    }
+}
+
+void Painting::move(float T){
+    if(is_moving) {
+        float margin = 1.5;
+
+        if (DBL.y > final_height + margin) {
+            DBL.y -= velocity_value*T;
+        } else is_moving = false;
+    }
 }
 
 #undef PI
