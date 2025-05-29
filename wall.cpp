@@ -919,4 +919,68 @@ void Door::move(float T){
     }
 }
 
+// PAINTING -------------------------------------------------------------------
+
+Painting::Painting(){
+    DBL = glm::vec3(0.0, 0.0, 0.0);
+    l = 0.5;
+    w = 5.0;
+    h = 3.0;
+    angle_horizontal = 0.0;
+    angle_vertical = 0.0;
+    final_height = DBL.y;
+}
+
+Painting::Painting(glm::vec3 position, unsigned short facing) {
+    this->facing = facing;
+    DBL = position;
+    l = 0.5;
+    w = 5.0;
+    h = 3.0;
+    angle_horizontal = 0.0;
+    angle_vertical = 0.0;  
+}
+
+void Painting::setAngle_horizontal(float alpha){
+    Obstacle_rect::setAngle_horizontal(alpha);
+}
+
+void Painting::setAngle_vertical(float alpha){
+    Obstacle_rect::setAngle_vertical(alpha);
+}
+
+void Painting::draw(glm::mat4 P, glm::mat4 V, ShaderProgram* s_p) {
+        glm::mat4 M = glm::mat4(1.0f);
+        M = glm::translate(M, getPosition());
+        M = glm::rotate(M, (float) PI/2, glm::vec3(0.0f, 0.0f, 1.0f));
+
+        if (getFacing() == 0) {
+                M = glm::rotate(M, (float) PI/2, glm::vec3(1.0f, 0.0f, 0.0f));
+        }
+
+        if (getFacing() == 1) {
+                M = glm::rotate(M, (float) PI, glm::vec3(1.0f, 0.0f, 0.0f));
+        }
+
+        if (getFacing() == 2) {
+                M = glm::rotate(M, (float) -PI/2, glm::vec3(1.0f, 0.0f, 0.0f));
+        }
+
+        M = glm::scale(M, glm::vec3(1.5f));
+
+        s_p->use();
+        glUniformMatrix4fv(spTextured->u("M"), 1, false, glm::value_ptr(M));
+        glUniformMatrix4fv(s_p->u("P"), 1, false, glm::value_ptr(P));
+        glUniformMatrix4fv(s_p->u("V"), 1, false, glm::value_ptr(V));
+        Models::painting.Draw(*s_p);
+}
+
+glm::vec3 Painting::getPosition(){
+    return DBL;
+}
+
+short unsigned Painting::getFacing(){
+    return facing;
+}
+
 #undef PI

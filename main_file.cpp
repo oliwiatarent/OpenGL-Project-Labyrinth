@@ -51,11 +51,6 @@ struct Treasure {
         bool rotate;
 };
 
-struct Painting {
-        glm::vec3 position;
-        short unsigned facing;
-};
-
 
 using namespace std;
 
@@ -212,30 +207,6 @@ void draw_treasure() {
         glUniformMatrix4fv(spTextured->u("M"), 1, false, glm::value_ptr(M));
 
         Models::treasure.Draw(*spTextured);
-}
-
-void draw_painting(Painting painting) {
-        glm::mat4 M = glm::mat4(1.0f);
-        M = glm::translate(M, painting.position);
-        M = glm::rotate(M, PI/2, glm::vec3(0.0f, 0.0f, 1.0f));
-
-        if (painting.facing == 0) {
-                M = glm::rotate(M, PI/2, glm::vec3(1.0f, 0.0f, 0.0f));
-        }
-
-        if (painting.facing == 1) {
-                M = glm::rotate(M, PI, glm::vec3(1.0f, 0.0f, 0.0f));
-        }
-
-        if (painting.facing == 2) {
-                M = glm::rotate(M, -PI/2, glm::vec3(1.0f, 0.0f, 0.0f));
-        }
-
-
-        M = glm::scale(M, glm::vec3(1.5f));
-
-        glUniformMatrix4fv(spTextured->u("M"), 1, false, glm::value_ptr(M));
-        Models::painting.Draw(*spTextured);
 }
 
 bool porownaj_odleglosci(glm::vec3 p1, glm::vec3 p2){
@@ -756,9 +727,8 @@ void prepareScene(){
                         short unsigned facing;
 
                         if (iss >> x >> y >> z >> facing) {
-                                Painting painting;
-                                painting.position = glm::vec3(x, y, z);
-                                painting.facing = facing;
+                                Painting painting(glm::vec3(x, y, z), facing);
+                                
                                 paintings.push_back(painting);
                         }
                 }
@@ -792,6 +762,7 @@ void prepareScene(){
         for(unsigned int i=0;i<ramps.size();i++) OBSTACLES.push_back(&ramps[i]);
         for(unsigned int i=0;i<fences.size();i++) OBSTACLES.push_back(&fences[i]);
         for(unsigned int i=0;i<doors.size();i++) OBSTACLES.push_back(&doors[i]);
+        for(unsigned int i=0;i<paintings.size();i++) OBSTACLES.push_back(&paintings[i]);
 }
 
 void drawScene(GLFWwindow* window, float dt){
@@ -810,9 +781,6 @@ void drawScene(GLFWwindow* window, float dt){
         }
         for (int i = 0; i < ghosts.size(); i++) {
                 draw_ghost(ghosts[i]);
-        }
-        for (int i = 0; i < paintings.size(); i++) {
-                draw_painting(paintings[i]);
         }
 
 

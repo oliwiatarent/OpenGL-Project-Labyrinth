@@ -221,4 +221,23 @@ class Door : public Obstacle_rect{
         void move(float T);
 };
 
+class Painting : public Obstacle_rect{
+    protected:
+        float final_height; 
+        static constexpr float velocity_value = 1.0;
+        volatile bool is_moving = false;
+        short unsigned facing;
+        
+    public:
+        Painting();
+        Painting(glm::vec3 position, short unsigned facing);
+
+        void setAngle_horizontal(float alpha);
+        void setAngle_vertical(float alpha);
+        void draw(glm::mat4 P, glm::mat4 V, ShaderProgram* s_p); // metoda rysująca
+
+        glm::vec3 getPosition();
+        short unsigned getFacing();
+};
+
 #endif
